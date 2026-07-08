@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Points Center - Earn Points & Redeem Rewards</title>
+    <meta name="description" content="Earn points by completing daily tasks, check-in every day, and redeem your points for exciting rewards. Play games, watch videos, read articles and more.">
+    <meta name="keywords" content="points center, earn points, redeem rewards, daily check-in, task rewards, loyalty program">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="">
+    <meta property="og:title" content="Points Center - Earn Points & Redeem Rewards">
+    <meta property="og:description" content="Complete tasks, earn points, and redeem rewards. Daily check-in bonus available!">
+    <meta property="og:type" content="website">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Points Center",
+        "description": "Earn points by completing tasks and redeem them for rewards",
+        "applicationCategory": "LifestyleApplication"
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #F2F2F7;
+            color: #1C1C1E;
+            min-height: 100vh;
+            padding-bottom: 80px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
+            padding: 16px 20px;
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(255, 107, 0, 0.3);
+        }
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-back {
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .header-back svg {
+            width: 24px;
+            height: 24px;
+            fill: #fff;
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .header-action {
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* Points Card */
+        .points-card-wrap {
+            padding: 16px;
+        }
+        .points-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .points-card-label {
+            font-size: 13px;
+            color: #8E8E93;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .points-card-balance {
+            font-size: 42px;
+            font-weight: 800;
+            color: #FF9500;
+            line-height: 1;
+            margin-bottom: 14px;
+        }
+        .points-card-balance .unit {
+            font-size: 16px;
+            font-weight: 600;
+            color: #8E8E93;
+            margin-left: 4px;
+        }
+        .points-card-stats {
+            display: flex;
+            gap: 24px;
+        }
+        .points-card-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #636366;
+        }
+        .points-card-stat .stat-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .stat-dot.earn { background: #34C759; }
+        .stat-dot.spend { background: #FF3B30; }
+        .points-card-stat .stat-val {
+            font-weight: 700;
+            color: #1C1C1E;
+        }
+        .points-history-link {
+            display: block;
+            text-align: right;
+            font-size: 12px;
+            color: #FF9500;
+            text-decoration: none;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        /* 7-Day Check-in */
+        .checkin-wrap {
+            padding: 0 16px 16px;
+        }
+        .checkin-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .checkin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .checkin-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1C1C1E;
+        }
+        .checkin-streak {
+            font-size: 12px;
+            color: #FF9500;
+            font-weight: 600;
+            background: #FFF3E0;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        .checkin-days {
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .checkin-day {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .checkin-day-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 auto 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            border: 2px solid #E5E5EA;
+            background: #FAFAFA;
+            color: #C7C7CC;
+            transition: all 0.3s ease;
+        }
+        .checkin-day-circle.checked {
+            background: #FF9500;
+            border-color: #FF9500;
+            color: #fff;
+        }
+        .checkin-day-circle.today {
+            border-color: #FF9500;
+            color: #FF9500;
+            background: #FFF8F0;
+            animation: pulse-border 2s infinite;
+        }
+        .checkin-day-circle.today.checked {
+            background: #FF9500;
+            color: #fff;
+            animation: none;
+        }
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(255, 149, 0, 0); }
+        }
+        .checkin-day-label {
+            font-size: 10px;
+            color: #8E8E93;
+            margin-bottom: 2px;
+        }
+        .checkin-day-reward {
+            font-size: 10px;
+            color: #FF9500;
+            font-weight: 600;
+        }
+        .checkin-day-reward.dim {
+            color: #C7C7CC;
+        }
+        .checkin-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #FF9500, #FF6B00);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            letter-spacing: 0.5px;
+        }
+        .checkin-btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+        .checkin-btn:disabled {
+            background: #E5E5EA;
+            color: #C7C7CC;
+            cursor: not-allowed;
+        }
+        .checkin-btn.done {
+            background: #34C759;
+        }
+
+        /* Tab Bar */
+        .tab-bar {
+            display: flex;
+            margin: 0 16px;
+            background: #E5E5EA;
+            border-radius: 10px;
+            padding: 3px;
+            position: sticky;
+            top: 64px;
+            z-index: 99;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            background: transparent;
+            color: #636366;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.25s ease;
+        }
+        .tab-btn.active {
+            background: #fff;
+            color: #FF9500;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Task List */
+        .content-wrap {
+            padding: 12px 16px;
+        }
+        .task-item {
+            background: #fff;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+            transition: transform 0.15s;
+            cursor: pointer;
+        }
+        .task-item:active {
+            transform: scale(0.985);
+        }
+        .task-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .task-icon.game { background: #FFF0E0; }
+        .task-icon.video { background: #E8F0FE; }
+        .task-icon.news { background: #E8F5E9; }
+        .task-icon.novel { background: #F3E5F5; }
+        .task-icon.survey { background: #FFF9E0; }
+        .task-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .task-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1C1C1E;
+            margin-bottom: 2px;
+        }
+        .task-desc {
+            font-size: 12px;
+            color: #8E8E93;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .task-action {
+            flex-shrink: 0;
+        }
+        .task-action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            background: #FF9500;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.15s;
+        }
+        .task-action-btn:active {
+            opacity: 0.8;
+        }
+        .task-action-btn:disabled {
+            background: #E5E5EA;
+            color: #C7C7CC;
+            cursor: not-allowed;
+        }
+        .task-action-btn.done {
+            background: #34C759;
+        }
+        .task-reward {
+            font-size: 12px;
+            color: #FF9500;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        /* Rewards Grid */
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .reward-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+            transition: transform 0.15s;
+        }
+        .reward-card:active {
+            transform: scale(0.97);
+        }
+        .reward-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            background: #FFF3E0;
+        }
+        .reward-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1C1C1E;
+            margin-bottom: 4px;
+        }
+        .reward-cost {
+            font-size: 13px;
+            color: #FF9500;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .reward-exchange-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 20px;
+            background: #FF9500;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            width: 100%;
+        }
+        .reward-exchange-btn:active {
+            opacity: 0.8;
+        }
+        .reward-exchange-btn:disabled {
+            background: #E5E5EA;
+            color: #C7C7CC;
+            cursor: not-allowed;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.35);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .loading-overlay.show {
+            display: flex;
+        }
+        .loading-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 30px 24px;
+            text-align: center;
+            max-width: 280px;
+            width: 90%;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #F2F2F7;
+            border-top: 4px solid #FF9500;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-text {
+            font-size: 14px;
+            color: #636366;
+            line-height: 1.5;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            text-align: center;
+            max-width: 260px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .toast.success { background: rgba(52, 199, 89, 0.9); }
+        .toast.error { background: rgba(255, 59, 48, 0.9); }
+
+        /* Points History Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 9998;
+            display: none;
+            align-items: flex-end;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-sheet {
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-height: 70vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-handle {
+            width: 36px;
+            height: 5px;
+            background: #D1D1D6;
+            border-radius: 3px;
+            margin: 10px auto;
+        }
+        .modal-header {
+            padding: 8px 20px 16px;
+            font-size: 17px;
+            font-weight: 700;
+            text-align: center;
+            border-bottom: 1px solid #F2F2F7;
+        }
+        .modal-close {
+            position: absolute;
+            right: 16px;
+            top: 14px;
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: #F2F2F7;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8E8E93;
+        }
+        .history-list {
+            padding: 8px 0;
+        }
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #F9F9F9;
+            gap: 10px;
+        }
+        .history-item-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .history-item-dot.earn { background: #E8F5E9; }
+        .history-item-dot.spend { background: #FFEBEE; }
+        .history-item-info { flex: 1; min-width: 0; }
+        .history-item-remark { font-size: 14px; font-weight: 500; color: #1C1C1E; }
+        .history-item-time { font-size: 12px; color: #8E8E93; margin-top: 2px; }
+        .history-item-pts {
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .history-item-pts.earn { color: #34C759; }
+        .history-item-pts.spend { color: #FF3B30; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8E8E93;
+        }
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        /* Footer */
+        .page-footer {
+            text-align: center;
+            padding: 20px 16px;
+            font-size: 11px;
+            color: #C7C7CC;
+        }
+        .page-footer a {
+            color: #8E8E93;
+            text-decoration: none;
+            margin: 0 6px;
+        }
+        .page-footer a:hover {
+            color: #FF9500;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top">
+            <div class="header-back" onclick="history.back()">
+                <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            </div>
+            <div class="header-title">Points Center</div>
+            <div class="header-action">&#9432;</div>
+        </div>
+    </div>
+
+    <!-- Points Balance Card -->
+    <div class="points-card-wrap">
+        <div class="points-card">
+            <div class="points-card-label">Current Balance</div>
+            <div class="points-card-balance" id="pointsBalance">0<span class="unit">pts</span></div>
+            <div class="points-card-stats">
+                <div class="points-card-stat">
+                    <span class="stat-dot earn"></span> Earned <span class="stat-val" id="pointsEarned">0</span>
+                </div>
+                <div class="points-card-stat">
+                    <span class="stat-dot spend"></span> Spent <span class="stat-val" id="pointsSpent">0</span>
+                </div>
+            </div>
+            <a href="javascript:void(0)" class="points-history-link" id="showHistory">View History &#8250;</a>
+        </div>
+    </div>
+
+    <!-- 7-Day Check-in -->
+    <div class="checkin-wrap">
+        <div class="checkin-card">
+            <div class="checkin-header">
+                <div class="checkin-title">Daily Check-in</div>
+                <div class="checkin-streak" id="streakBadge">Streak: 0 days</div>
+            </div>
+            <div class="checkin-days" id="checkinDays"></div>
+            <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">Check In Today</button>
+        </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <button class="tab-btn active" id="tabTasks" onclick="switchTab('tasks')">Tasks</button>
+        <button class="tab-btn" id="tabExchange" onclick="switchTab('exchange')">Exchange</button>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-wrap" id="contentArea"></div>
+
+    <!-- Footer -->
+    <div class="page-footer">
+        <a href="privacy.html">Privacy Policy</a> |
+        <a href="terms.html">Terms of Service</a> |
+        <a href="cookies.html">Cookie Policy</a>
+        <div style="margin-top:6px;">&copy; 2026 Points Center. All rights reserved.</div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-box">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">Processing request, please wait...</div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Points History Modal -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div style="position:relative;">
+                <div class="modal-header">Points History</div>
+                <button class="modal-close" onclick="closeHistory()">&times;</button>
+            </div>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <!-- CryptoJS MD5 (required by api.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- API Layer: configuration, crypto, HTTP helpers, API functions -->
+    <script src="api.js"></script>
+
+    <script>
+    /* ============================================================
+     * App State
+     * ============================================================ */
+    var state = {
+        currentTab: 'tasks',
+        points: 0,
+        earned: 0,
+        spent: 0,
+        checkinDays: [],
+        streak: 0,
+        checkedToday: false,
+        tasks: [],
+        rewards: [],
+        pointsHistory: [],
+        loadingTimer: null
+    };
+
+    /* ============================================================
+     * UI Helpers
+     * ============================================================ */
+    function showLoading(text) {
+        var overlay = document.getElementById('loadingOverlay');
+        var label = document.getElementById('loadingText');
+        label.textContent = text || 'Processing request, please wait...';
+        overlay.classList.add('show');
+
+        clearTimeout(state.loadingTimer);
+        state.loadingTimer = setTimeout(function() {
+            label.textContent = 'Loading timeout, please check your network and try again';
+        }, CONFIG.loadingTimeout);
+    }
+
+    function hideLoading() {
+        var overlay = document.getElementById('loadingOverlay');
+        overlay.classList.remove('show');
+        clearTimeout(state.loadingTimer);
+    }
+
+    function showToast(msg, type) {
+        var toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.className = 'toast ' + (type || '') + ' show';
+        setTimeout(function() {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+
+    /* ============================================================
+     * Render Functions
+     * ============================================================ */
+
+    function renderPointsCard() {
+        document.getElementById('pointsBalance').innerHTML = state.points + '<span class="unit">pts</span>';
+        document.getElementById('pointsEarned').textContent = '+' + state.earned;
+        document.getElementById('pointsSpent').textContent = '-' + state.spent;
+    }
+
+    function renderCheckin() {
+        var html = '';
+        var days = state.checkinDays;
+        var checkedToday = state.checkedToday;
+
+        for (var i = 0; i < days.length; i++) {
+            var d = days[i];
+            var circleClass = 'checkin-day-circle';
+            var checkmark = d.day;
+
+            if (d.checked) {
+                circleClass += ' checked';
+                checkmark = '&#10003;';
+            } else if (d.isToday && !checkedToday) {
+                circleClass += ' today';
+            }
+
+            html += '<div class="checkin-day">';
+            html += '<div class="checkin-day-label">Day ' + d.day + '</div>';
+            html += '<div class="' + circleClass + '">' + checkmark + '</div>';
+            html += '<div class="checkin-day-reward' + (d.checked ? '' : ' dim') + '">+' + d.reward + '</div>';
+            html += '</div>';
+        }
+
+        document.getElementById('checkinDays').innerHTML = html;
+        document.getElementById('streakBadge').textContent = 'Streak: ' + state.streak + ' day' + (state.streak !== 1 ? 's' : '');
+
+        var btn = document.getElementById('checkinBtn');
+        if (checkedToday) {
+            btn.textContent = 'Checked In Today';
+            btn.className = 'checkin-btn done';
+            btn.disabled = true;
+        } else {
+            btn.textContent = 'Check In Today';
+            btn.className = 'checkin-btn';
+            btn.disabled = false;
+        }
+    }
+
+    function renderTasks() {
+        var tasks = state.tasks;
+        var html = '';
+
+        if (tasks.length === 0) {
+            html = '<div class="empty-state"><div class="empty-state-icon">&#128221;</div><div class="empty-state-text">No tasks available right now</div></div>';
+        }
+
+        for (var i = 0; i < tasks.length; i++) {
+            var t = tasks[i];
+            var btnHtml = '';
+            var btnClass = 'task-action-btn';
+            var disabled = '';
+
+            if (t.status === 'done') {
+                btnClass += ' done';
+                disabled = ' disabled';
+                btnHtml = '&#10003; Done';
+            } else if (t.status === 'claim') {
+                btnHtml = 'Claim';
+            } else {
+                btnHtml = 'Go';
+            }
+
+            // Show progress for multi-count tasks (total > 1)
+            var countInfo = '';
+            if (t.total > 1) {
+                countInfo = '<div class="task-desc" style="color:#FF9500">' + t.finish + '/' + t.total + ' completed</div>';
+            }
+
+            html += '<div class="task-item" onclick="handleTask(\'' + t.t_id + '\')">';
+            html += '<div class="task-icon ' + t.icon + '">' + t.emoji + '</div>';
+            html += '<div class="task-info">';
+            html += '<div class="task-name">' + t.name + '</div>';
+            html += '<div class="task-desc">' + t.desc + '</div>';
+            html += countInfo;
+            html += '</div>';
+            html += '<div class="task-action">';
+            html += '<button class="' + btnClass + '"' + disabled + ' onclick="event.stopPropagation();handleTask(\'' + t.t_id + '\')">' + btnHtml + '</button>';
+            html += '<div class="task-reward">+' + t.reward + ' pts</div>';
+            html += '</div>';
+            html += '</div>';
+        }
+
+        document.getElementById('contentArea').innerHTML = html;
+    }
+
+    function renderRewards() {
+        var rewards = state.rewards;
+        var html = '<div class="rewards-grid">';
+
+        if (rewards.length === 0) {
+            html = '<div class="empty-state"><div class="empty-state-icon">&#127873;</div><div class="empty-state-text">No rewards available</div></div>';
+        } else {
+            for (var i = 0; i < rewards.length; i++) {
+                var r = rewards[i];
+                var disabled = state.points < r.points ? ' disabled' : '';
+                html += '<div class="reward-card">';
+                html += '<div class="reward-icon">' + (r.emoji || '&#127873;') + '</div>';
+                html += '<div class="reward-name">' + r.name + '</div>';
+                html += '<div class="reward-cost">' + r.points + ' pts</div>';
+                html += '<button class="reward-exchange-btn"' + disabled + ' onclick="doExchange(' + r.id + ', \'' + r.name + '\', ' + r.points + ')">' + (disabled ? 'Not Enough' : 'Exchange') + '</button>';
+                html += '</div>';
+            }
+        }
+
+        html += '</div>';
+        document.getElementById('contentArea').innerHTML = html;
+    }
+
+    function renderHistory() {
+        var html = '<div class="loading-spinner" style="margin:40px auto;"></div>';
+        document.getElementById('historyList').innerHTML = html;
+
+        fetchPoints(function(err, data) {
+            var list;
+            if (!err && data && data.lists) {
+                list = data.lists;
+            } else {
+                list = getMockHistory();
+            }
+
+            html = '';
+            if (list.length === 0) {
+                html = '<div class="empty-state"><div class="empty-state-icon">&#128203;</div><div class="empty-state-text">No history yet</div></div>';
+            } else {
+                for (var i = 0; i < list.length; i++) {
+                    var h = list[i];
+                    var isEarn = h.type === 'earn';
+                    html += '<div class="history-item">';
+                    html += '<div class="history-item-dot ' + h.type + '">' + (isEarn ? '+' : '-') + '</div>';
+                    html += '<div class="history-item-info">';
+                    html += '<div class="history-item-remark">' + (h.remark || '') + '</div>';
+                    html += '<div class="history-item-time">' + (h.created_at || '') + '</div>';
+                    html += '</div>';
+                    html += '<div class="history-item-pts ' + h.type + '">' + (isEarn ? '+' : '') + h.points + ' pts</div>';
+                    html += '</div>';
+                }
+            }
+            document.getElementById('historyList').innerHTML = html;
+        });
+    }
+
+    /* ============================================================
+     * Actions
+     * ============================================================ */
+
+    function switchTab(tab) {
+        state.currentTab = tab;
+        document.getElementById('tabTasks').className = 'tab-btn' + (tab === 'tasks' ? ' active' : '');
+        document.getElementById('tabExchange').className = 'tab-btn' + (tab === 'exchange' ? ' active' : '');
+
+        if (tab === 'tasks') {
+            renderTasks();
+        } else {
+            renderRewards();
+        }
+    }
+
+    function doCheckin() {
+        if (state.checkedToday) return;
+
+        showLoading('Checking in...');
+
+        apiCheckin(null, function(err, resp) {
+            if (err) {
+                hideLoading();
+                showToast('Check-in failed. Please try again.', 'error');
+                return;
+            }
+
+            if (resp && resp.code === 0) {
+                showToast('Check-in successful!', 'success');
+                refreshAll();
+            } else {
+                hideLoading();
+                showToast((resp && resp.msg) || 'Check-in failed', 'error');
+            }
+        });
+    }
+
+    /**
+     * Unified task dispatch: finds task in state, then routes to
+     * the correct action based on status (claim) or type (h5/ad/api).
+     */
+    function handleTask(tId) {
+        var task = null;
+        for (var i = 0; i < state.tasks.length; i++) {
+            if (state.tasks[i].t_id == tId) {
+                task = state.tasks[i];
+                break;
+            }
+        }
+        if (!task) return;
+
+        // Claim points for finished-but-unclaimed tasks
+        if (task.status === 'claim') {
+            claimTask(task);
+            return;
+        }
+
+        // Already done
+        if (task.status === 'done') return;
+
+        // Dispatch by task type
+        if (task.type === 'h5') {
+            startH5Task(task);
+        } else if (task.type === 'ad') {
+            showToast('Ad tasks coming soon', 'error');
+        } else if (task.type === 'api') {
+            startApiTask(task);
+        } else {
+            // Unknown type — try h5 flow
+            startH5Task(task);
+        }
+    }
+
+    /** Start an h5 task: report click, open landing page (direct link or via API) */
+    function startH5Task(task) {
+        showLoading('Loading task...');
+
+        apiReport(task.t_id, 'c', '', function(err) {
+            if (err) {
+                hideLoading();
+                showToast('Failed to start task', 'error');
+                return;
+            }
+
+            // If task has a direct link from the API, use it
+            if (task.link) {
+                hideLoading();
+                showToast('Task started! Complete it to earn ' + task.reward + ' pts', 'success');
+                apiReport(task.t_id, 'a', window.location.hostname, function() {});
+                window.location.href = task.link;
+                return;
+            }
+
+            // Otherwise get landing page via the /landing endpoint
+            apiLanding(task.t_id, function(err2, resp2) {
+                hideLoading();
+                if (err2) {
+                    showToast('Failed to load task', 'error');
+                    return;
+                }
+
+                var landingUrl = '';
+                if (resp2._decrypted) {
+                    landingUrl = typeof resp2._decrypted === 'string' ? resp2._decrypted : '';
+                } else if (resp2.data && typeof resp2.data === 'string') {
+                    landingUrl = resp2.data;
+                }
+
+                if (landingUrl) {
+                    showToast('Task started! Complete it to earn ' + task.reward + ' pts', 'success');
+                    apiReport(task.t_id, 'a', window.location.hostname, function() {});
+                    window.location.href = landingUrl;
+                } else {
+                    showToast('Failed to load task page', 'error');
+                }
+            });
+        });
+    }
+
+    /** Start an API-based task (report click only, no redirect) */
+    function startApiTask(task) {
+        showLoading('Loading task...');
+        apiReport(task.t_id, 'c', '', function(err) {
+            hideLoading();
+            if (err) {
+                showToast('Failed to start task', 'error');
+                return;
+            }
+            showToast('Task started! Complete the action to earn ' + task.reward + ' pts', 'success');
+        });
+    }
+
+    /** Claim points for a finished task */
+    function claimTask(task) {
+        showLoading('Claiming reward...');
+
+        apiReport(task.t_id, 'f', '', function(err) {
+            if (err) {
+                hideLoading();
+                showToast('Failed to report task', 'error');
+                return;
+            }
+
+            apiClaim(task.t_id, function(err2, resp2) {
+                hideLoading();
+                if (err2) {
+                    showToast('Failed to claim points', 'error');
+                    return;
+                }
+
+                if (resp2 && resp2.code === 0) {
+                    state.points += task.reward;
+                    state.earned += task.reward;
+                    renderPointsCard();
+                    showToast('Reward claimed! +' + task.reward + ' pts', 'success');
+
+                    // Update task locally
+                    task.status = 'done';
+                    task.isFinish = true;
+                    task.isClaim = true;
+                    renderTasks();
+                } else {
+                    showToast((resp2 && resp2.msg) || 'Claim failed', 'error');
+                }
+            });
+        });
+    }
+
+    function doExchange(rewardId, name, cost) {
+        if (state.points < cost) {
+            showToast('Not enough points', 'error');
+            return;
+        }
+
+        showLoading('Exchanging...');
+
+        apiExchange(rewardId, function(err, resp) {
+            if (err) {
+                hideLoading();
+                showToast('Exchange failed. Please try again.', 'error');
+                return;
+            }
+
+            if (resp && resp.code === 0) {
+                showToast('Redeemed: ' + name + '!', 'success');
+                refreshAll();
+            } else {
+                hideLoading();
+                showToast((resp && resp.msg) || 'Exchange failed', 'error');
+            }
+        });
+    }
+
+    function openHistory() {
+        renderHistory();
+        document.getElementById('historyModal').classList.add('show');
+    }
+
+    function closeHistory() {
+        document.getElementById('historyModal').classList.remove('show');
+    }
+
+    /* ============================================================
+     * Data Refresh
+     * ============================================================ */
+
+    /**
+     * Refresh all state from the server.
+     * Uses fetchTaskLists() (tasks + points + checkin in one call).
+     * Falls back to mock data on failure.
+     */
+    function refreshAll() {
+        showLoading('Loading...');
+
+        fetchTaskLists(function(err, data) {
+            if (!err && data) {
+                state.tasks = data.tasks || [];
+                state.points = data.points || 0;
+
+                if (data.checkin) {
+                    state.checkinDays = data.checkin.days;
+                    state.streak = data.checkin.streak;
+                    state.checkedToday = data.checkin.checkedToday;
+                }
+            } else {
+                // API failed — use mock data
+                var checkinData = getMockCheckinData();
+                state.checkinDays = checkinData.days;
+                state.streak = checkinData.streak;
+                state.tasks = getMockTasks();
+                state.points = 1280;
+            }
+
+            // Rewards still come from a separate endpoint
+            fetchRewards(function(err2, data2) {
+                if (!err2 && data2 && data2.lists) {
+                    state.rewards = data2.lists;
+                } else if (!err2 && data2 && data2.length !== undefined) {
+                    state.rewards = data2;
+                } else {
+                    state.rewards = getMockRewards();
+                }
+
+                hideLoading();
+                renderPointsCard();
+                renderCheckin();
+                if (state.currentTab === 'tasks') {
+                    renderTasks();
+                } else {
+                    renderRewards();
+                }
+            });
+        });
+    }
+
+    /* ============================================================
+     * Initialize
+     * ============================================================ */
+    function init() {
+        // Seed initial UI from mock data (replaced when API responds)
+        var checkinData = getMockCheckinData();
+        state.checkinDays = checkinData.days;
+        state.streak = checkinData.streak;
+        state.tasks = getMockTasks();
+        state.points = 1280;
+        state.earned = 260;
+        state.spent = 220;
+
+        renderCheckin();
+        renderTasks();
+        renderPointsCard();
+
+        // Load real data from API
+        refreshAll();
+
+        // Modal: click overlay dismisses
+        document.getElementById('historyModal').addEventListener('click', function(e) {
+            if (e.target === this) closeHistory();
+        });
+
+        document.getElementById('showHistory').addEventListener('click', openHistory);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+    </script>
+</body>
+</html>

