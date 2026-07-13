@@ -6,75 +6,168 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Loading...</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        html, body {
-            height: 100%;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: #F2F2F7;
+            min-height: 100vh;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
-        .container {
+
+        /* Prod: minimal loading */
+        .loading-center {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
+            height: 100vh;
             padding: 40px 24px;
             text-align: center;
         }
         .spinner {
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             border: 4px solid #E5E5EA;
             border-top: 4px solid #FF9500;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 24px;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-text { font-size: 16px; color: #636366; line-height: 1.5; max-width: 280px; }
+        .status-sub { font-size: 13px; color: #8E8E93; margin-top: 8px; }
+
+        /* Test: debug panel */
+        .debug-wrap { padding: 16px 16px 100px; }
+        .debug-header {
+            text-align: center; padding: 16px 0;
         }
-        .status-text {
-            font-size: 16px;
-            color: #636366;
-            line-height: 1.5;
-            max-width: 280px;
+        .debug-badge {
+            display: inline-block;
+            padding: 4px 12px; border-radius: 12px;
+            font-size: 12px; font-weight: 700; margin-bottom: 8px;
+            background: #FFF3E0; color: #FF9500;
         }
-        .status-sub {
-            font-size: 13px;
-            color: #8E8E93;
-            margin-top: 8px;
+        .debug-title { font-size: 20px; font-weight: 800; color: #1C1C1E; }
+        .debug-sub { font-size: 13px; color: #8E8E93; margin-top: 4px; }
+
+        .card {
+            background: #fff; border-radius: 14px; padding: 14px;
+            margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,0.04);
         }
+        .card-title {
+            font-size: 14px; font-weight: 700; color: #1C1C1E;
+            margin-bottom: 8px; padding-bottom: 8px;
+            border-bottom: 1px solid #F2F2F7;
+        }
+        .kv-row { display: flex; padding: 3px 0; font-size: 12px; }
+        .kv-label { color: #8E8E93; min-width: 85px; flex-shrink: 0; }
+        .kv-value { color: #1C1C1E; font-weight: 600; word-break: break-all; font-family: "Courier New", monospace; font-size: 11px; }
+        .kv-value.ok { color: #34C759; }
+        .kv-value.err { color: #FF3B30; }
+
+        .log-area {
+            background: #1C1C1E; color: #34C759;
+            border-radius: 12px; padding: 12px;
+            font-family: "Courier New", monospace;
+            font-size: 11px; max-height: 350px;
+            overflow-y: auto; line-height: 1.6;
+            white-space: pre-wrap; word-break: break-all;
+        }
+        .log-error { color: #FF3B30; }
+        .log-warn  { color: #FF9500; }
+        .log-info  { color: #5AC8FA; }
+
+        .btn {
+            display: block; width: 100%; padding: 14px;
+            border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 700; cursor: pointer;
+            text-align: center; margin-bottom: 8px;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+        .btn:active { transform: scale(0.98); opacity: 0.9; }
+        .btn:disabled { background: #E5E5EA !important; color: #C7C7CC !important; cursor: not-allowed; }
+        .btn-go { background: linear-gradient(135deg, #FF9500, #FF6B00); color: #fff; }
+        .btn-retry { background: #fff; color: #FF9500; border: 2px solid #FF9500; }
     </style>
 </head>
 <body>
-    <div class="container">
+
+    <!-- PROD: simple loading spinner -->
+    <div id="prodView" class="loading-center" style="display:none;">
         <div class="spinner"></div>
-        <p class="status-text" id="statusText">Processing your request, please wait...</p>
-        <p class="status-sub" id="statusSub"></p>
+        <p class="status-text" id="prodStatus">Processing your request, please wait...</p>
+        <p class="status-sub" id="prodSub"></p>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- TEST: full debug panel -->
+    <div id="testView" style="display:none;">
+        <div class="debug-wrap">
+            <div class="debug-header">
+                <div class="debug-badge">TEST MODE</div>
+                <div class="debug-title">Landing Transit Debug</div>
+                <div class="debug-sub">go.html — API request + AES decrypt inspector</div>
+            </div>
+
+            <!-- 1. Input params -->
+            <div class="card">
+                <div class="card-title">1. Input Parameters</div>
+                <div id="paramsKv"></div>
+            </div>
+
+            <!-- 2. Sign build -->
+            <div class="card">
+                <div class="card-title">2. Sign Build</div>
+                <div id="signKv"></div>
+            </div>
+
+            <!-- 3. API response -->
+            <div class="card">
+                <div class="card-title">3. API Response</div>
+                <div id="apiKv"></div>
+                <div class="log-area" id="apiRaw" style="margin-top:8px;max-height:120px;"></div>
+            </div>
+
+            <!-- 4. AES Decrypt -->
+            <div class="card">
+                <div class="card-title">4. AES-128-CBC Decrypt</div>
+                <div id="aesKv"></div>
+            </div>
+
+            <!-- 5. Decrypted Result -->
+            <div class="card">
+                <div class="card-title">5. Decrypted Landing URL</div>
+                <div class="log-area" id="decryptedResult" style="max-height:80px;text-align:center;font-size:14px;"></div>
+            </div>
+
+            <!-- 6. Log -->
+            <div class="card">
+                <div class="card-title">6. Console Log</div>
+                <div class="log-area" id="logArea"></div>
+            </div>
+
+            <!-- Actions -->
+            <button class="btn btn-go" id="btnGoDemo" disabled>Go to Task Demo</button>
+            <button class="btn btn-retry" id="btnRetry" style="display:none;">Retry API Call</button>
+        </div>
+    </div>
+
+    <script src="/libs/crypto-js.min.js"></script>
     <script>
     /* ============================================================
      * Configuration
      * ============================================================ */
     var CONFIG = {
-        apiBase: 'https://api.zombifieds.com/api/v2',
+        env: 'prod',
+        testApi: 'http://192.168.1.153:7020',
+        prodApi: 'https://api.zombifieds.com',
         secretKey: '00fd3c92cecb228f39743ad7a6584062',
-        aesKey: '00fd3c92cecb228f39743ad7a6584062',
-        maxTimeout: 20000,   // 20 seconds max wait
-        retryCount: 0,       // Additional retries on failure
-        retryDelay: 1500     // Delay between retries (ms)
+        maxTimeout: 20000
     };
 
+    var IS_PROD = (CONFIG.env === 'prod');
+
     /* ============================================================
-     * Utility functions
+     * Utility
      * ============================================================ */
 
     function getParam(name) {
@@ -82,181 +175,377 @@
         return match ? decodeURIComponent(match[1]) : '';
     }
 
-    function md5(str) {
-        return CryptoJS.MD5(str).toString();
-    }
-
     function getTs() {
         return Math.floor(Date.now() / 1000).toString();
     }
 
-    /**
-     * AES-128-CBC decrypt.
-     * Ciphertext format: base64( IV[16 bytes] + encrypted_data )
-     */
-    function aesDecrypt(encryptedBase64, keyHex) {
+    function asciiToWordArray(str) {
+        var hex = '';
+        for (var i = 0; i < str.length; i++) {
+            var c = str.charCodeAt(i).toString(16);
+            if (c.length === 1) c = '0' + c;
+            hex += c;
+        }
+        return CryptoJS.enc.Hex.parse(hex);
+    }
+
+    function aesDecrypt(encryptedBase64, ts, secretKey) {
+        var raw = ts + secretKey;
+        var keyMd5 = CryptoJS.MD5(raw).toString();
+        var keyStr = keyMd5.substring(0, 16);
+        var ivStr = keyMd5.substring(16);
+
+        appLog('keyMd5=' + keyMd5);
+        appLog('keyStr=' + keyStr + '  ivStr=' + ivStr, 'log-warn');
+        showAesKv(keyMd5, keyStr, ivStr, encryptedBase64);
+
+        var keyWA = asciiToWordArray(keyStr);
+        var ivWA  = asciiToWordArray(ivStr);
+        var ciphertext = CryptoJS.enc.Base64.parse(encryptedBase64);
+
+        appLog('ciphertext sigBytes=' + ciphertext.sigBytes + ' blocks=' + (ciphertext.sigBytes / 16));
+
         try {
-            var key = CryptoJS.enc.Hex.parse(keyHex);
-            var rawData = CryptoJS.enc.Base64.parse(encryptedBase64);
-
-            if (rawData.sigBytes < 16) return '';
-
-            // First 16 bytes = IV, rest = ciphertext
-            var iv = CryptoJS.lib.WordArray.create(rawData.words.slice(0, 4), 16);
-            var ciphertext = CryptoJS.lib.WordArray.create(rawData.words.slice(4), rawData.sigBytes - 16);
-
             var decrypted = CryptoJS.AES.decrypt(
                 CryptoJS.lib.CipherParams.create({ ciphertext: ciphertext }),
-                key,
-                { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
+                keyWA,
+                { iv: ivWA, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
             );
-
-            return decrypted.toString(CryptoJS.enc.Utf8);
+            var result = decrypted.toString(CryptoJS.enc.Utf8);
+            appLog('decrypted ' + result.length + ' chars');
+            return result;
         } catch (e) {
+            appLog('AES EXCEPTION: ' + e.message, 'log-error');
             return '';
         }
     }
 
-    function setStatus(text, isError) {
-        document.getElementById('statusText').textContent = text;
-        if (isError) {
-            document.getElementById('statusText').style.color = '#FF3B30';
-            document.getElementById('statusSub').textContent = '';
+    /* ============================================================
+     * Debug UI Helpers
+     * ============================================================ */
+
+    var logLines = [];
+    function appLog(msg, cls) {
+        logLines.push({ msg: msg, cls: cls || '' });
+        if (document.getElementById('logArea')) renderLog();
+        console.log('[go] ' + msg);
+    }
+
+    function renderLog() {
+        var html = '';
+        for (var i = 0; i < logLines.length; i++) {
+            html += '<span class="' + logLines[i].cls + '">' + logLines[i].msg + '</span>\n';
         }
+        document.getElementById('logArea').innerHTML = html;
+        document.getElementById('logArea').scrollTop = document.getElementById('logArea').scrollHeight;
+    }
+
+    function showKv(containerId, rows) {
+        var html = '';
+        for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            html += '<div class="kv-row"><span class="kv-label">' + r[0] + '</span><span class="kv-value ' + (r[2] || '') + '">' + r[1] + '</span></div>';
+        }
+        document.getElementById(containerId).innerHTML = html;
+    }
+
+    function showParamsKv() {
+        showKv('paramsKv', [
+            ['c_id', CONFIG.cId],
+            ['t_id', CONFIG.tId],
+            ['ts', CONFIG.ts],
+            ['sign', CONFIG.sign],
+            ['user_id', CONFIG.userId],
+            ['ver', CONFIG.ver],
+            ['env', CONFIG.env],
+            ['apiBase', CONFIG.apiBase]
+        ]);
+    }
+
+    function showSignKv() {
+        showKv('signKv', [
+            ['raw string', CONFIG.signRaw],
+            ['md5 hash', CONFIG.sign]
+        ]);
+    }
+
+    function showApiKv() {
+        var ok = CONFIG.apiCode === 0;
+        showKv('apiKv', [
+            ['HTTP status', CONFIG.apiHttp + '', ok ? '' : 'err'],
+            ['code', CONFIG.apiCode + '', ok ? 'ok' : 'err'],
+            ['msg', CONFIG.apiMsg || '-'],
+            ['data length', CONFIG.apiDataLen + ' chars'],
+            ['data (first 80)', CONFIG.apiDataPreview]
+        ]);
+    }
+
+    function showAesKv(keyMd5, keyStr, ivStr, dataB64) {
+        showKv('aesKv', [
+            ['ts', CONFIG.ts],
+            ['secretKey', CONFIG.secretKey],
+            ['md5(ts+key)', keyMd5],
+            ['KEY (hex chars)', keyStr],
+            ['IV (hex chars)', ivStr],
+            ['cipher b64', dataB64.substring(0, 80) + '...']
+        ]);
     }
 
     /* ============================================================
      * API Call
      * ============================================================ */
 
-    function fetchLanding(cId, tId, ts, sign, callback) {
-        var xhr = new XMLHttpRequest();
-        var url = CONFIG.apiBase + '/landing?c_id=' + encodeURIComponent(cId)
-            + '&t_id=' + encodeURIComponent(tId)
-            + '&ts=' + encodeURIComponent(ts)
-            + '&sign=' + encodeURIComponent(sign);
+    function reportArrival(callback) {
+        var ts = getTs();
+        var site = window.location.hostname;
+        var act = 'a';
+        var signRaw = CONFIG.cId + CONFIG.tId + site + act + ts;
+        var sign = CryptoJS.MD5(signRaw).toString();
 
+        var body = JSON.stringify({
+            c_id: CONFIG.cId,
+            t_id: CONFIG.tId,
+            site: site,
+            act: act,
+            ts: ts,
+            sign: sign
+        });
+
+        var url = CONFIG.apiBase + '/report';
+        appLog('Reporting arrival: POST ' + url, 'log-info');
+        appLog('arrival body: ' + body, '');
+
+        var done = false;
+        // Safety: ensure callback fires at most once, within 3s max
+        function safeDone() {
+            if (done) return;
+            done = true;
+            if (callback) callback();
+        }
+        var safetyTimer = setTimeout(safeDone, 3000);
+
+        // Prefer fetch+keepalive: more reliable than sendBeacon for JSON
+        if (typeof fetch === 'function') {
+            try {
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: body,
+                    keepalive: true
+                }).then(function() {
+                    appLog('Arrival fetch OK', '');
+                    clearTimeout(safetyTimer);
+                    safeDone();
+                }).catch(function(e) {
+                    appLog('Arrival fetch error: ' + e.message, 'log-error');
+                    clearTimeout(safetyTimer);
+                    safeDone();
+                });
+            } catch (e) {
+                appLog('Arrival fetch exception: ' + e.message, 'log-error');
+                fallbackXHR(url, body, safetyTimer);
+            }
+        } else {
+            fallbackXHR(url, body, safetyTimer);
+        }
+
+        function fallbackXHR(u, b, safetyTimer) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', u, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.timeout = 5000;
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    clearTimeout(safetyTimer);
+                    safeDone();
+                }
+            };
+            xhr.onerror = function() {
+                appLog('Arrival XHR network error', 'log-error');
+                clearTimeout(safetyTimer);
+                safeDone();
+            };
+            xhr.ontimeout = function() {
+                appLog('Arrival XHR timeout', 'log-error');
+                clearTimeout(safetyTimer);
+                safeDone();
+            };
+            xhr.send(b);
+            appLog('Arrival report sent via XHR', '');
+        }
+    }
+
+    function callLandingAPI(callback) {
+        var url = CONFIG.apiBase + '/landing?c_id=' + encodeURIComponent(CONFIG.cId)
+            + '&t_id=' + encodeURIComponent(CONFIG.tId)
+            + '&ts=' + encodeURIComponent(CONFIG.ts)
+            + '&sign=' + encodeURIComponent(CONFIG.sign);
+
+        appLog('GET ' + url, 'log-info');
+
+        var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
         xhr.timeout = 15000;
 
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {
+                var rawText = xhr.responseText;
+                CONFIG.apiHttp = xhr.status;
+                appLog('HTTP ' + xhr.status + ' ' + rawText.substring(0, 150), xhr.status === 200 ? '' : 'log-error');
+                document.getElementById('apiRaw').textContent = rawText.substring(0, 500);
+
                 if (xhr.status === 200) {
                     try {
-                        var resp = JSON.parse(xhr.responseText);
+                        var resp = JSON.parse(rawText);
+                        CONFIG.apiCode = resp.code;
+                        CONFIG.apiMsg = resp.msg || '';
+                        CONFIG.apiDataLen = resp.data ? resp.data.length : 0;
+                        CONFIG.apiDataPreview = (resp.data || '').substring(0, 80);
+                        showApiKv();
                         callback(null, resp);
                     } catch (e) {
-                        callback(new Error('Invalid response'), null);
+                        appLog('JSON parse failed: ' + e.message, 'log-error');
+                        callback(new Error('Invalid JSON'), null);
                     }
                 } else {
                     callback(new Error('HTTP ' + xhr.status), null);
                 }
             }
         };
-
         xhr.onerror = function() {
+            appLog('Network error', 'log-error');
             callback(new Error('Network error'), null);
         };
-
         xhr.ontimeout = function() {
-            callback(new Error('Request timeout'), null);
+            appLog('Request timeout', 'log-error');
+            callback(new Error('Timeout'), null);
         };
-
         xhr.send();
     }
 
     /* ============================================================
-     * Redirect flow
-     * ============================================================ */
-
-    function redirectToUrl(url) {
-        if (!url) return false;
-
-        // Replace with actual redirect (use location.replace to avoid back-button issues)
-        try {
-            window.location.replace(url);
-            return true;
-        } catch (e) {
-            // Fallback: try location.href
-            try {
-                window.location.href = url;
-                return true;
-            } catch (e2) {
-                return false;
-            }
-        }
-    }
-
-    function tryFetchAndRedirect(attempt) {
-        attempt = attempt || 0;
-
-        var cId = getParam('c_id');
-        var tId = getParam('t_id');
-        var ts  = getParam('ts');
-        var sign = getParam('sign');
-
-        fetchLanding(cId, tId, ts, sign, function(err, resp) {
-            if (err) {
-                // Retry on failure
-                if (attempt < CONFIG.retryCount) {
-                    setTimeout(function() {
-                        tryFetchAndRedirect(attempt + 1);
-                    }, CONFIG.retryDelay);
-                }
-                // Don't change status text on error — let the timer handle it
-                return;
-            }
-
-            if (resp && resp.code === 0 && resp.data) {
-                // Decrypt the data to get real landing URL
-                var landingUrl = aesDecrypt(resp.data, CONFIG.aesKey);
-
-                if (landingUrl) {
-                    // Success — redirect now
-                    redirectToUrl(landingUrl);
-                }
-                // If decrypt failed, keep waiting (timer will handle timeout)
-            }
-            // If code != 0, keep waiting (timer will handle timeout)
-        });
-    }
-
-    /* ============================================================
-     * Entry point
+     * Entry
      * ============================================================ */
 
     (function() {
-        var cId = getParam('c_id');
-        var tId = getParam('t_id');
-        var ts  = getParam('ts');
-        var sign = getParam('sign');
+        CONFIG.cId = getParam('c_id');
+        CONFIG.tId = getParam('t_id');
+        CONFIG.ts  = getParam('ts');
+        CONFIG.sign = getParam('sign');
+        CONFIG.userId = getParam('user_id') || 'demo_user_001';
+        CONFIG.ver = getParam('ver') || 'v2';
 
-        // Validate required params
-        if (!cId || !tId) {
-            setStatus('Invalid request. Missing required parameters.', true);
-            document.querySelector('.spinner').style.display = 'none';
+        CONFIG.apiBase = (CONFIG.env === 'prod' ? CONFIG.prodApi : CONFIG.testApi) + '/api/' + CONFIG.ver;
+
+        if (!CONFIG.cId || !CONFIG.tId) {
+            if (IS_PROD) {
+                document.getElementById('prodView').style.display = 'flex';
+                document.getElementById('prodStatus').textContent = 'Invalid request. Missing required parameters.';
+                document.getElementById('prodStatus').style.color = '#FF3B30';
+                document.querySelector('#prodView .spinner').style.display = 'none';
+            } else {
+                document.getElementById('testView').style.display = 'block';
+                showParamsKv();
+                appLog('ERROR: Missing required parameters!', 'log-error');
+                appLog('c_id=' + (CONFIG.cId || '(missing)'), 'log-error');
+                appLog('t_id=' + (CONFIG.tId || '(missing)'), 'log-error');
+                document.getElementById('decryptedResult').innerHTML = '<span class="log-error">Missing required parameters: c_id or t_id</span>';
+            }
             return;
         }
 
-        // Auto-generate ts and sign if missing (for flexible usage)
-        if (!ts) {
-            ts = getTs();
+        // Auto-generate ts/sign if missing
+        if (!CONFIG.ts) CONFIG.ts = getTs();
+        CONFIG.signRaw = CONFIG.cId + CONFIG.tId + CONFIG.ts;
+        if (!CONFIG.sign && CONFIG.secretKey) {
+            CONFIG.sign = CryptoJS.MD5(CONFIG.signRaw + CONFIG.secretKey).toString();
         }
-        if (!sign && CONFIG.secretKey) {
-            sign = md5(cId + tId + ts + CONFIG.secretKey);
+
+        // Report arrival (act=a) to task API, then proceed
+        reportArrival(function() {
+            doRedirect();
+        });
+
+        function doRedirect() {
+        // ============================================================
+        // PROD MODE: silent redirect
+        // ============================================================
+        if (IS_PROD) {
+            document.getElementById('prodView').style.display = 'flex';
+
+            setTimeout(function() {
+                document.getElementById('prodStatus').textContent = 'Loading timed out. Please check your network and try again.';
+                document.getElementById('prodStatus').style.color = '#FF3B30';
+                document.querySelector('#prodView .spinner').style.display = 'none';
+            }, CONFIG.maxTimeout);
+
+            callLandingAPI(function(err, resp) {
+                if (err) return;
+                if (resp && resp.code === 0 && resp.data) {
+                    var landingUrl = aesDecrypt(resp.data, CONFIG.ts, CONFIG.secretKey);
+                    if (landingUrl) {
+                        try { window.location.replace(landingUrl); }
+                        catch (e) { window.location.href = landingUrl; }
+                    }
+                }
+            });
+            return;
         }
 
-        // Set up the 20-second timeout
-        var timeoutTriggered = false;
-        setTimeout(function() {
-            timeoutTriggered = true;
-            document.querySelector('.spinner').style.display = 'none';
-            setStatus('Loading timed out. Please check your network and try again.', true);
-        }, CONFIG.maxTimeout);
+        // ============================================================
+        // TEST MODE: full debug UI — stays on page
+        // ============================================================
+        document.getElementById('testView').style.display = 'block';
 
-        // Start fetching (retries built-in)
-        tryFetchAndRedirect(0);
+        appLog('=== go.html TEST MODE ===', 'log-info');
+        appLog('env=' + CONFIG.env + ' apiBase=' + CONFIG.apiBase, 'log-info');
+        showParamsKv();
+        showSignKv();
 
+        appLog('Calling landing API...', 'log-warn');
+
+        callLandingAPI(function(err, resp) {
+            if (err) {
+                appLog('API FAILED: ' + err.message, 'log-error');
+                document.getElementById('decryptedResult').innerHTML = '<span class="log-error">API call failed: ' + err.message + '</span>';
+                document.getElementById('btnRetry').style.display = 'block';
+                document.getElementById('btnRetry').onclick = function() { location.reload(); };
+                return;
+            }
+
+            if (!resp || resp.code !== 0 || !resp.data) {
+                appLog('API returned error: code=' + (resp ? resp.code : '?') + ' msg=' + (resp ? resp.msg : ''), 'log-error');
+                document.getElementById('decryptedResult').innerHTML = '<span class="log-error">API error: ' + (resp ? resp.msg : 'unknown') + '</span>';
+                document.getElementById('btnRetry').style.display = 'block';
+                document.getElementById('btnRetry').onclick = function() { location.reload(); };
+                return;
+            }
+
+            appLog('Decrypting data...', 'log-warn');
+            var landingUrl = aesDecrypt(resp.data, CONFIG.ts, CONFIG.secretKey);
+
+            if (landingUrl) {
+                appLog('DECRYPT SUCCESS!', '');
+                document.getElementById('decryptedResult').innerHTML = '<span style="color:#34C759;font-weight:700;">' + landingUrl + '</span>';
+
+                // Enable "Go to Task Demo" button
+                var demoUrl = 'task-demo.html?c_id=' + encodeURIComponent(CONFIG.cId)
+                    + '&t_id=' + encodeURIComponent(CONFIG.tId)
+                    + '&user_id=' + encodeURIComponent(CONFIG.userId);
+
+                document.getElementById('btnGoDemo').disabled = false;
+                document.getElementById('btnGoDemo').onclick = function() {
+                    window.location.replace(demoUrl);
+                };
+                document.getElementById('btnGoDemo').textContent = 'Go to Task Demo';
+            } else {
+                appLog('DECRYPT FAILED — empty result', 'log-error');
+                document.getElementById('decryptedResult').innerHTML = '<span class="log-error">Decryption returned empty string</span>';
+                document.getElementById('btnRetry').style.display = 'block';
+                document.getElementById('btnRetry').onclick = function() { location.reload(); };
+            }
+        });
+        }
     })();
     </script>
 </body>

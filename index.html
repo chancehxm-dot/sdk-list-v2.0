@@ -698,9 +698,10 @@
         </div>
     </div>
 
-    <!-- CryptoJS MD5 (required by api.js) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <!-- API Layer: configuration, crypto, HTTP helpers, API functions -->
+    <!-- crypto.js: zero-dependency MD5 + AES (loaded first) -->
+    <!-- <script src="crypto.js"></script> -->
+    <script src="/libs/crypto-js.min.js"></script>
+    <!-- API Layer: configuration, HTTP helpers, API functions -->
     <script src="api.js"></script>
 
     <script>
@@ -977,7 +978,7 @@
         }
     }
 
-    /** Start an h5 task: report click, open landing page (direct link or via API) */
+    /** Start an h5 task: report click, open landing page */
     function startH5Task(task) {
         showLoading('Loading task...');
 
@@ -988,7 +989,24 @@
                 return;
             }
 
-            // If task has a direct link from the API, use it
+            // Test/local env: redirect to go.html transit page
+            if (CONFIG.env !== 'prod') {
+                hideLoading();
+                var goTs = getTs();
+                var goSign = buildSign([CONFIG.cId, String(task.t_id), goTs], true);
+                var goUrl = 'go.html?c_id=' + encodeURIComponent(CONFIG.cId)
+                    + '&t_id=' + encodeURIComponent(task.t_id)
+                    + '&ts=' + goTs
+                    + '&sign=' + goSign
+                    + '&user_id=' + encodeURIComponent(CONFIG.userId);
+                console.log('[app] test mode → go.html', goUrl);
+                showToast('Task started! Complete it to earn ' + task.reward + ' pts', 'success');
+                apiReport(task.t_id, 'a', window.location.hostname, function() {});
+                window.location.href = goUrl;
+                return;
+            }
+
+            // Prod: direct link or landing API
             if (task.link) {
                 hideLoading();
                 showToast('Task started! Complete it to earn ' + task.reward + ' pts', 'success');
@@ -997,7 +1015,6 @@
                 return;
             }
 
-            // Otherwise get landing page via the /landing endpoint
             apiLanding(task.t_id, function(err2, resp2) {
                 hideLoading();
                 if (err2) {

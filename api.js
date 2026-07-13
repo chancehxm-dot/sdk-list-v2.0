@@ -1,7 +1,7 @@
 /**
  * api.js - Points Center API Layer
- * Configuration, crypto utilities, HTTP helpers, and API functions.
- * Dependencies: CryptoJS (must be loaded before this script)
+ * Configuration, HTTP helpers, and API functions.
+ * Dependencies: CryptoJS (loaded before this script)
  */
 /* ============================================================
  * Configuration
@@ -13,14 +13,15 @@ var CONFIG = {
     cId: 'test2',
     userId: '',
     secretKey: '00fd3c92cecb228f39743ad7a6584062',
-    aesKey: '00fd3c92cecb228f39743ad7a6584062',
-    aesIv: '',
-    isHideCompleted: false,  // Hide completed tasks from list
+    isHideCompleted: false,
     loadingTimeout: 20000
 };
 
+console.log('[api] secretKey=' + CONFIG.secretKey);
+
 // Auto-detect API base from env
 CONFIG.apiBase = (CONFIG.env === 'prod' ? CONFIG.prodApi : CONFIG.testApi) + '/api/v2';
+console.log('[api] env=' + CONFIG.env + ' apiBase=' + CONFIG.apiBase);
 
 /* ============================================================
  * Utility Functions
@@ -32,6 +33,7 @@ function getParam(name) {
 }
 
 CONFIG.userId = getParam('user_id') || 'demo_user_001';
+console.log('[api] userId=' + CONFIG.userId);
 
 function md5(str) {
     return CryptoJS.MD5(str).toString();
@@ -39,76 +41,119 @@ function md5(str) {
 
 function buildSign(params, withSecret) {
     var raw = params.join('');
+    console.log('[api] buildSign raw=' + raw);
     if (withSecret) {
         raw += CONFIG.secretKey;
     }
-    return md5(raw);
+    var h = md5(raw);
+    console.log('[api] buildSign hash=' + h);
+    return h;
 }
 
 function getTs() {
-    return Math.floor(Date.now() / 1000).toString();
+    var t = Math.floor(Date.now() / 1000).toString();
+    console.log('[api] getTs=' + t);
+    return t;
 }
 
 /**
- * AES-128-CBC decrypt.
- * Ciphertext format (ivHex empty): base64( IV[16 bytes] + encrypted_data )
- * Ciphertext format (ivHex set):   base64( encrypted_data ), IV from ivHex
+ * Convert an ASCII string to a CryptoJS WordArray.
+ * Each char's byte value becomes one byte in the WordArray.
  */
-function aesDecrypt(encryptedBase64, keyHex, ivHex) {
+function asciiToWordArray(str) {
+    var hex = '';
+    for (var i = 0; i < str.length; i++) {
+        var c = str.charCodeAt(i).toString(16);
+        if (c.length === 1) c = '0' + c;
+        hex += c;
+    }
+    return CryptoJS.enc.Hex.parse(hex);
+}
+
+/**
+ * AES-128-CBC decrypt using CryptoJS.
+ * Key derivation (matches server):
+ *   raw    = ts + secretKey
+ *   keyMd5 = md5(raw)
+ *   KEY    = first 16 hex chars of keyMd5, as ASCII bytes → 16 bytes
+ *   IV     = last 16 hex chars of keyMd5,  as ASCII bytes → 16 bytes
+ * Ciphertext is the FULL base64-decoded data (IV is NOT prepended).
+ */
+function aesDecrypt(encryptedBase64, ts, secretKey) {
     try {
-        var key = CryptoJS.enc.Hex.parse(keyHex);
-        var rawData = CryptoJS.enc.Base64.parse(encryptedBase64);
+        console.log('[api] aesDecrypt START (ts-based key derivation)');
+        console.log('[api]   ts=' + ts);
+        console.log('[api]   secretKey=' + secretKey);
+        console.log('[api]   input (first 60 chars)=' + encryptedBase64.substring(0, 60));
 
-        var iv;
-        var ciphertext;
-        if (ivHex) {
-            iv = CryptoJS.enc.Hex.parse(ivHex);
-            ciphertext = rawData;
-        } else {
-            // First 16 bytes = IV, rest = ciphertext
-            if (rawData.sigBytes < 16) return '';
-            iv = CryptoJS.lib.WordArray.create(rawData.words.slice(0, 4), 16);
-            ciphertext = CryptoJS.lib.WordArray.create(rawData.words.slice(4), rawData.sigBytes - 16);
-        }
+        // Key derivation: md5(ts + secretKey)
+        var raw = ts + secretKey;
+        var keyMd5 = md5(raw);
+        var keyStr = keyMd5.substring(0, 16);
+        var ivStr = keyMd5.substring(16);
 
+        console.log('[api]   raw=' + raw.substring(0, 20) + '...');
+        console.log('[api]   keyMd5=' + keyMd5);
+        console.log('[api]   keyStr=' + keyStr + ' (as ASCII bytes → 16 bytes)');
+        console.log('[api]   ivStr=' + ivStr + ' (as ASCII bytes → 16 bytes)');
+
+        // Convert hex-string chars to actual byte arrays for CryptoJS
+        var keyWordArray = asciiToWordArray(keyStr);
+        var ivWordArray  = asciiToWordArray(ivStr);
+
+        console.log('[api]   keyWordArray sigBytes=' + keyWordArray.sigBytes);
+        console.log('[api]   ivWordArray sigBytes=' + ivWordArray.sigBytes);
+
+        // Base64 decode (full data = ciphertext, no IV prepended)
+        var ciphertext = CryptoJS.enc.Base64.parse(encryptedBase64);
+        console.log('[api]   ciphertext sigBytes=' + ciphertext.sigBytes + ' blocks=' + (ciphertext.sigBytes / 16));
+
+        console.log('[api]   calling CryptoJS.AES.decrypt...');
         var decrypted = CryptoJS.AES.decrypt(
             CryptoJS.lib.CipherParams.create({ ciphertext: ciphertext }),
-            key,
-            { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
+            keyWordArray,
+            { iv: ivWordArray, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
         );
 
         var result = decrypted.toString(CryptoJS.enc.Utf8);
-        if (!result) {
-            // Fallback: try zero IV (IV might be external/separate)
-            iv = CryptoJS.enc.Hex.parse('00000000000000000000000000000000');
-            decrypted = CryptoJS.AES.decrypt(
-                CryptoJS.lib.CipherParams.create({ ciphertext: rawData }),
-                key,
-                { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
-            );
-            result = decrypted.toString(CryptoJS.enc.Utf8);
+        console.log('[api]   decrypt result: len=' + result.length + ' chars');
+
+        if (result) {
+            console.log('[api] aesDecrypt SUCCESS: ' + result.substring(0, 200));
+        } else {
+            console.log('[api] aesDecrypt FAILED: returned empty');
         }
         return result;
     } catch (e) {
+        console.log('[api] aesDecrypt EXCEPTION: ' + e.message);
+        console.log('[api]   stack: ' + e.stack);
         return '';
     }
 }
 
 /**
  * Decrypt AES-encrypted data field in API response.
- * Parses JSON if the decrypted result is valid JSON.
+ * ts must match the ts used in the API request (required for key derivation).
  */
-function decryptResponseData(resp) {
+function decryptResponseData(resp, ts) {
     if (!resp || !resp.data || typeof resp.data !== 'string') {
+        console.log('[api] decryptResponseData: no data field, skipping');
         return resp;
     }
-    var decrypted = aesDecrypt(resp.data, CONFIG.aesKey, CONFIG.aesIv);
+    console.log('[api] decryptResponseData: dataLen=' + resp.data.length + ' ts=' + ts);
+    var decrypted = aesDecrypt(resp.data, ts, CONFIG.secretKey);
     if (decrypted) {
         try {
-            resp._decrypted = JSON.parse(decrypted);
+            var obj = JSON.parse(decrypted);
+            resp._decrypted = obj;
+            console.log('[api] decryptResponseData: parsed JSON ↓');
+            console.log(obj);
         } catch (e) {
             resp._decrypted = decrypted;
+            console.log('[api] decryptResponseData: string (' + decrypted.length + ' chars)=', decrypted.substring(0, 300));
         }
+    } else {
+        console.log('[api] decryptResponseData: decryption returned empty');
     }
     return resp;
 }
@@ -118,27 +163,34 @@ function decryptResponseData(resp) {
  * ============================================================ */
 
 function apiGet(url, callback) {
+    console.log('[api] GET ' + url);
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.timeout = 15000;
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
+            console.log('[api]  <- HTTP ' + xhr.status + ' (' + xhr.responseText.length + ' bytes)');
             if (xhr.status === 200) {
                 try {
                     var resp = JSON.parse(xhr.responseText);
+                    console.log('[api]  <- code=' + resp.code + ' msg=' + resp.msg + ' dataLen=' + (resp.data ? resp.data.length : 0));
                     callback(null, resp);
                 } catch (e) {
+                    console.log('[api]  <- JSON parse failed: ' + e.message);
                     callback(new Error('Invalid response'), null);
                 }
             } else {
+                console.log('[api]  <- HTTP error ' + xhr.status);
                 callback(new Error('HTTP ' + xhr.status), null);
             }
         }
     };
     xhr.onerror = function() {
+        console.log('[api]  <- Network error');
         callback(new Error('Network error'), null);
     };
     xhr.ontimeout = function() {
+        console.log('[api]  <- Request timeout');
         callback(new Error('Request timeout'), null);
     };
     xhr.send();
@@ -210,11 +262,11 @@ function mapTaskIcon(category, type) {
 /** Normalize a task object from API format to UI format */
 function normalizeTask(raw) {
     var iconData = mapTaskIcon(raw.category || '', raw.type || '');
+    // Force manual Claim interaction — even on refresh.
+    // 'done' only set locally after user clicks Claim in this session.
     var status = 'available';
-    if (raw.is_finish === 1 && raw.is_claim !== 1) {
+    if (raw.is_finish === 1) {
         status = 'claim';
-    } else if (raw.is_finish === 1) {
-        status = 'done';
     }
 
     return {
@@ -358,24 +410,41 @@ function fetchTaskLists(callback) {
         url += '&is_hide=1';
     }
 
-    apiGet(url, function(err, resp) {
-        if (err) { callback(err, null); return; }
+    console.log('[api] fetchTaskLists start');
 
-        resp = decryptResponseData(resp);
+    apiGet(url, function(err, resp) {
+        if (err) {
+            console.log('[api] fetchTaskLists ERROR: ' + err.message);
+            callback(err, null);
+            return;
+        }
+
+        console.log('[api] fetchTaskLists raw resp: code=' + resp.code + ' msg=' + (resp.msg || '') + ' hasData=' + !!(resp.data));
+
+        resp = decryptResponseData(resp, ts);
 
         if (resp._decrypted && typeof resp._decrypted === 'object') {
             var data = resp._decrypted;
+            console.log('[api] fetchTaskLists DECRYPTED ↓');
+            console.log(data);
+            console.log('[api]   task count=' + (data.task ? data.task.length : 0));
 
             // Normalize tasks
             var tasks = [];
             if (data.task && data.task.length !== undefined) {
                 tasks = normalizeTasks(data.task);
+                console.log('[api]   normalized ' + tasks.length + ' tasks');
+                for (var ti = 0; ti < tasks.length; ti++) {
+                    var t = tasks[ti];
+                    console.log('[api]     task[' + ti + ']: t_id=' + t.t_id + ' name=' + t.name + ' reward=' + t.reward + ' status=' + t.status + ' type=' + t.type);
+                }
             }
 
             // Normalize checkin
             var checkinNorm = null;
             if (data.checkin) {
                 checkinNorm = normalizeCheckin(data.checkin);
+                console.log('[api]   checkin: streak=' + checkinNorm.streak + ' checkedToday=' + checkinNorm.checkedToday + ' days=' + checkinNorm.days.length);
             }
 
             callback(null, {
@@ -387,9 +456,10 @@ function fetchTaskLists(callback) {
                 adUnitId: data.ad_unit_id || ''
             });
         } else if (resp.code === 0 && resp.data) {
-            // Data wasn't encrypted or decryption failed
+            console.log('[api] fetchTaskLists: code=0 but decryption failed or returned non-object');
             callback(null, resp);
         } else {
+            console.log('[api] fetchTaskLists FAILED: code=' + resp.code + ' msg=' + (resp.msg || 'unknown'));
             callback(new Error(resp.msg || 'Failed to load task list'), null);
         }
     });
@@ -404,7 +474,7 @@ function fetchPoints(callback) {
         + '&ts=' + ts + '&sign=' + sign;
     apiGet(url, function(err, resp) {
         if (err) { callback(err, null); return; }
-        resp = decryptResponseData(resp);
+        resp = decryptResponseData(resp, ts);
         if (resp._decrypted) {
             callback(null, resp._decrypted);
         } else if (resp.code === 0 && resp.data) {
@@ -439,7 +509,7 @@ function apiLanding(tId, callback) {
         + '&ts=' + ts + '&sign=' + sign;
     apiGet(url, function(err, resp) {
         if (err) { callback(err, null); return; }
-        resp = decryptResponseData(resp);
+        resp = decryptResponseData(resp, ts);
         callback(null, resp);
     });
 }
@@ -481,7 +551,7 @@ function fetchRewards(callback) {
         + '&ts=' + ts + '&sign=' + sign;
     apiGet(url, function(err, resp) {
         if (err) { callback(err, null); return; }
-        resp = decryptResponseData(resp);
+        resp = decryptResponseData(resp, ts);
         if (resp._decrypted) {
             callback(null, resp._decrypted);
         } else {

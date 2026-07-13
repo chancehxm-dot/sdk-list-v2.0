@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Task Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #F2F2F7;
+            min-height: 100vh;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0 10px;
+        }
+        .header-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .badge-test { background: #FFF3E0; color: #FF9500; }
+        .badge-prod { background: #E8F5E9; color: #34C759; }
+
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1C1C1E;
+            margin-bottom: 12px;
+        }
+
+        /* Task Info */
+        .task-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #F2F2F7;
+            font-size: 13px;
+        }
+        .task-info-row:last-child { border-bottom: none; }
+        .task-info-label { color: #8E8E93; }
+        .task-info-value { color: #1C1C1E; font-weight: 600; word-break: break-all; }
+
+        /* Timer */
+        .timer-section { text-align: center; padding: 24px 0; }
+        .timer-circle {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            border: 6px solid #E5E5EA;
+            border-top-color: #FF9500;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: #FF9500;
+        }
+        .timer-label { font-size: 14px; color: #8E8E93; }
+
+        /* Progress */
+        .progress-bar-wrap {
+            background: #E5E5EA;
+            border-radius: 6px;
+            height: 8px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #FF9500, #FF6B00);
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.3s;
+        }
+
+        /* Buttons */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: opacity 0.15s, transform 0.1s;
+            margin-bottom: 8px;
+        }
+        .btn:active { transform: scale(0.98); opacity: 0.9; }
+        .btn:disabled { background: #E5E5EA !important; color: #C7C7CC !important; cursor: not-allowed; }
+        .btn-primary { background: linear-gradient(135deg, #FF9500, #FF6B00); color: #fff; }
+        .btn-success { background: #34C759; color: #fff; }
+        .btn-outline { background: #fff; color: #FF9500; border: 2px solid #FF9500; }
+
+        /* Log */
+        .log-area {
+            background: #1C1C1E;
+            color: #34C759;
+            border-radius: 12px;
+            padding: 14px;
+            font-family: "Courier New", monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .log-error { color: #FF3B30; }
+        .log-warn { color: #FF9500; }
+        .log-info { color: #5AC8FA; }
+
+        /* Status badge */
+        .status-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+        .status-chip {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .chip-done { background: #E8F5E9; color: #34C759; }
+        .chip-pending { background: #F2F2F7; color: #8E8E93; }
+        .chip-active { background: #FFF3E0; color: #FF9500; }
+
+        .flex-row { display: flex; gap: 8px; }
+        .flex-row .btn { flex: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-badge badge-test" id="envBadge">TEST</div>
+        <div style="font-size:22px;font-weight:800;color:#1C1C1E;">Task Demo</div>
+        <div style="font-size:13px;color:#8E8E93;margin-top:4px;">Simulated task landing page</div>
+    </div>
+
+    <!-- Task Info -->
+    <div class="card">
+        <div class="card-title">Task Details</div>
+        <div class="task-info-row">
+            <span class="task-info-label">c_id</span>
+            <span class="task-info-value" id="infoCid">-</span>
+        </div>
+        <div class="task-info-row">
+            <span class="task-info-label">t_id</span>
+            <span class="task-info-value" id="infoTid">-</span>
+        </div>
+        <div class="task-info-row">
+            <span class="task-info-label">API Base</span>
+            <span class="task-info-value" id="infoApi">-</span>
+        </div>
+    </div>
+
+    <!-- Task Flow Status -->
+    <div class="card">
+        <div class="card-title">Task Flow</div>
+        <div class="status-row">
+            <span class="status-chip chip-done" id="chipS">s - Show</span>
+            <span class="status-chip chip-done" id="chipC">c - Click</span>
+            <span class="status-chip chip-active" id="chipA">a - Arrive</span>
+            <span class="status-chip chip-pending" id="chipF">f - Finish</span>
+        </div>
+        <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="flowProgress" style="width:50%"></div>
+        </div>
+    </div>
+
+    <!-- Task Content -->
+    <div class="card">
+        <div class="card-title" id="taskTitle">Stay on this page for 30 seconds</div>
+        <div class="timer-section">
+            <div class="timer-circle" id="timerDisplay">30</div>
+            <div class="timer-label" id="timerLabel">seconds remaining</div>
+        </div>
+        <button class="btn btn-primary" id="btnComplete" disabled>Complete Task</button>
+        <div class="flex-row" style="margin-top:8px;">
+            <button class="btn btn-outline" id="btnSkip" style="display:none;">Skip Timer (Dev)</button>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="card">
+        <div class="card-title">Manual Actions</div>
+        <div class="flex-row">
+            <button class="btn btn-outline" onclick="manualReport('s')">Report s</button>
+            <button class="btn btn-outline" onclick="manualReport('c')">Report c</button>
+            <button class="btn btn-outline" onclick="manualReport('a')">Report a</button>
+            <button class="btn btn-outline" onclick="manualReport('f')">Report f</button>
+        </div>
+        <button class="btn btn-success" onclick="manualClaim()" style="margin-top:8px;">Claim Points</button>
+    </div>
+
+    <!-- Log -->
+    <div class="card">
+        <div class="card-title">Console Log</div>
+        <div class="log-area" id="logArea"></div>
+    </div>
+
+    <script src="/libs/crypto-js.min.js"></script>
+    <script>
+    /* ============================================================
+     * Configuration
+     * ============================================================ */
+    var CONFIG = {
+        env: 'test2',
+        cId: '',
+        tId: '',
+        userId: '',
+        taskDuration: 30,
+        secretKey: '00fd3c92cecb228f39743ad7a6584062'
+    };
+
+    var IS_PROD = (CONFIG.env === 'prod');
+    CONFIG.apiBase = (IS_PROD ? 'https://api.zombifieds.com' : 'http://192.168.1.153:7020') + '/api/v2';
+
+    /* ============================================================
+     * State & Logging
+     * ============================================================ */
+
+    var state = {
+        reported: { s: false, c: false, a: false, f: false },
+        countdown: 0,
+        timerHandle: null,
+        claimed: false
+    };
+
+    var logLines = [];
+
+    function log(msg, cls) {
+        var time = new Date().toLocaleTimeString();
+        var line = '[' + time + '] ' + msg;
+        logLines.push({ line: line, cls: cls || '' });
+        renderLog();
+    }
+
+    function renderLog() {
+        var html = '';
+        for (var i = 0; i < logLines.length; i++) {
+            var item = logLines[i];
+            html += '<span class="' + item.cls + '">' + item.line + '</span>\n';
+        }
+        document.getElementById('logArea').innerHTML = html;
+        document.getElementById('logArea').scrollTop = document.getElementById('logArea').scrollHeight;
+    }
+
+    /* ============================================================
+     * Utility
+     * ============================================================ */
+
+    function getParam(name) {
+        var match = window.location.search.match(new RegExp('[?&]' + name + '=([^&]*)'));
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function getTs() {
+        return Math.floor(Date.now() / 1000).toString();
+    }
+
+    /* ============================================================
+     * API Calls
+     * ============================================================ */
+
+    function apiGet(url, callback) {
+        log('GET ' + url, 'log-info');
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.timeout = 10000;
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                var respText = xhr.responseText;
+                log('<- HTTP ' + xhr.status + ' ' + respText.substring(0, 200), xhr.status === 200 ? '' : 'log-error');
+                if (xhr.status === 200) {
+                    try { callback(null, JSON.parse(respText)); }
+                    catch (e) { callback(new Error('JSON parse failed'), null); }
+                } else {
+                    callback(new Error('HTTP ' + xhr.status), null);
+                }
+            }
+        };
+        xhr.onerror = function() { log('<- Network error', 'log-error'); callback(new Error('Network error'), null); };
+        xhr.ontimeout = function() { log('<- Timeout', 'log-error'); callback(new Error('Timeout'), null); };
+        xhr.send();
+    }
+
+    /** Report task status. Sign: md5(c_id+t_id+site+act+ts) — NO secret_key */
+    function apiReport(act, site, callback) {
+        var ts = getTs();
+        site = site || (IS_PROD ? window.location.hostname : 'dragonkint.com');
+        var raw = CONFIG.cId + CONFIG.tId + site + act + ts;
+        var sign = CryptoJS.MD5(raw).toString();
+
+        log('report act=' + act + ' site=' + site + ' raw=' + raw, 'log-warn');
+
+        var url = CONFIG.apiBase + '/report?c_id=' + encodeURIComponent(CONFIG.cId)
+            + '&t_id=' + encodeURIComponent(CONFIG.tId)
+            + '&act=' + encodeURIComponent(act)
+            + '&site=' + encodeURIComponent(site)
+            + '&ts=' + ts + '&sign=' + sign;
+
+        apiGet(url, function(err, resp) {
+            if (err) { callback(err, null); return; }
+            callback(null, resp);
+        });
+    }
+
+    /** Claim task points. Sign: md5(c_id+t_id+user_id+ts+secret_key) — WITH secret_key */
+    function apiClaim(callback) {
+        var ts = getTs();
+        var raw = CONFIG.cId + CONFIG.tId + CONFIG.userId + ts + CONFIG.secretKey;
+        var sign = CryptoJS.MD5(raw).toString();
+
+        log('claim raw=' + raw.substring(0, 40) + '...', 'log-warn');
+
+        var url = CONFIG.apiBase + '/claim?c_id=' + encodeURIComponent(CONFIG.cId)
+            + '&user_id=' + encodeURIComponent(CONFIG.userId)
+            + '&t_id=' + encodeURIComponent(CONFIG.tId)
+            + '&ts=' + ts + '&sign=' + sign;
+
+        apiGet(url, function(err, resp) {
+            callback(err, resp);
+        });
+    }
+
+    /* ============================================================
+     * UI Updates
+     * ============================================================ */
+
+    function updateChip(act, done) {
+        var chip = document.getElementById('chip' + act.toUpperCase());
+        if (!chip) return;
+        chip.className = 'status-chip ' + (done ? 'chip-done' : 'chip-active');
+    }
+
+    function updateFlowProgress() {
+        var r = state.reported;
+        var done = (r.s ? 1 : 0) + (r.c ? 1 : 0) + (r.a ? 1 : 0) + (r.f ? 1 : 0);
+        var pct = Math.round((done / 4) * 100);
+        document.getElementById('flowProgress').style.width = pct + '%';
+    }
+
+    function startCountdown(seconds) {
+        state.countdown = seconds;
+        updateTimerDisplay();
+        clearInterval(state.timerHandle);
+        state.timerHandle = setInterval(function() {
+            state.countdown--;
+            updateTimerDisplay();
+            if (state.countdown <= 0) {
+                clearInterval(state.timerHandle);
+                onCountdownComplete();
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        document.getElementById('timerDisplay').textContent = state.countdown;
+        document.getElementById('timerLabel').textContent = state.countdown <= 0 ? 'Ready!' : 'seconds remaining';
+    }
+
+    function onCountdownComplete() {
+        document.getElementById('btnComplete').disabled = false;
+        document.getElementById('btnComplete').textContent = 'Complete Task & Claim Reward';
+        document.getElementById('timerLabel').textContent = 'Task ready — tap button to finish';
+        document.getElementById('timerDisplay').style.color = '#34C759';
+        document.getElementById('timerDisplay').style.borderTopColor = '#34C759';
+    }
+
+    /* ============================================================
+     * Actions
+     * ============================================================ */
+
+    function manualReport(act) {
+        apiReport(act, '', function(err, resp) {
+            if (err) {
+                log('[' + act + '] FAILED: ' + err.message, 'log-error');
+                return;
+            }
+            if (resp && resp.code === 0) {
+                state.reported[act] = true;
+                updateChip(act, true);
+                updateFlowProgress();
+                log('[' + act + '] OK code=' + resp.code, '');
+            } else {
+                log('[' + act + '] code=' + (resp ? resp.code : '?') + ' msg=' + (resp ? resp.msg : '?'), 'log-error');
+            }
+        });
+    }
+
+    function manualClaim() {
+        apiClaim(function(err, resp) {
+            if (err) {
+                log('[claim] FAILED: ' + err.message, 'log-error');
+                return;
+            }
+            if (resp && resp.code === 0) {
+                state.claimed = true;
+                log('[claim] SUCCESS! Points awarded.', '');
+                document.getElementById('btnComplete').disabled = true;
+                document.getElementById('btnComplete').textContent = 'Points Claimed!';
+            } else {
+                log('[claim] code=' + (resp ? resp.code : '?') + ' msg=' + (resp ? resp.msg : '?'), 'log-error');
+            }
+        });
+    }
+
+    function completeAndClaim() {
+        if (state.reported.f && state.claimed) return;
+
+        // Report finish
+        apiReport('f', '', function(err, resp) {
+            if (err) {
+                log('[f] FAILED: ' + err.message, 'log-error');
+                return;
+            }
+            if (resp && resp.code === 0) {
+                state.reported.f = true;
+                updateChip('f', true);
+                updateFlowProgress();
+                log('[f] OK — task finished', '');
+
+                // Claim points
+                apiClaim(function(err2, resp2) {
+                    if (err2) {
+                        log('[claim] FAILED: ' + err2.message, 'log-error');
+                        return;
+                    }
+                    if (resp2 && resp2.code === 0) {
+                        state.claimed = true;
+                        log('[claim] SUCCESS! Points awarded.', '');
+                        document.getElementById('btnComplete').disabled = true;
+                        document.getElementById('btnComplete').textContent = 'Completed — Points Claimed!';
+                        document.getElementById('timerLabel').textContent = 'Done! You earned points for this task.';
+                    } else {
+                        log('[claim] code=' + (resp2 ? resp2.code : '?') + ' msg=' + (resp2 ? resp2.msg : '?'), 'log-error');
+                    }
+                });
+            } else {
+                log('[f] code=' + (resp ? resp.code : '?') + ' msg=' + (resp ? resp.msg : '?'), 'log-error');
+            }
+        });
+    }
+
+    /* ============================================================
+     * Init
+     * ============================================================ */
+
+    (function() {
+        CONFIG.cId = getParam('c_id') || 'test2';
+        CONFIG.tId = getParam('t_id') || 'test_task';
+        CONFIG.userId = getParam('user_id') || 'demo_user_001';
+        CONFIG.taskDuration = parseInt(getParam('duration')) || 30;
+
+        // Update env badge
+        var badge = document.getElementById('envBadge');
+        if (IS_PROD) {
+            badge.textContent = 'PROD';
+            badge.className = 'header-badge badge-prod';
+        }
+
+        // Update info display
+        document.getElementById('infoCid').textContent = CONFIG.cId;
+        document.getElementById('infoTid').textContent = CONFIG.tId;
+        document.getElementById('infoApi').textContent = CONFIG.apiBase;
+        document.getElementById('taskTitle').textContent = 'Stay on this page for ' + CONFIG.taskDuration + ' seconds';
+        document.getElementById('timerDisplay').textContent = CONFIG.taskDuration;
+
+        log('=== Task Demo Started ===', 'log-info');
+        log('c_id=' + CONFIG.cId + ' t_id=' + CONFIG.tId + ' user_id=' + CONFIG.userId, 'log-info');
+        log('apiBase=' + CONFIG.apiBase + ' isProd=' + IS_PROD, 'log-info');
+        log('duration=' + CONFIG.taskDuration + 's', 'log-info');
+
+        // Show dev skip button in non-prod
+        if (!IS_PROD) {
+            document.getElementById('btnSkip').style.display = 'block';
+            document.getElementById('btnSkip').onclick = function() {
+                state.countdown = 1;
+                updateTimerDisplay();
+            };
+        }
+
+        // Report arrive (a) on page load
+        log('Auto-reporting arrive (a)...', 'log-warn');
+        apiReport('a', '', function(err, resp) {
+            if (err) {
+                log('[a] FAILED: ' + err.message, 'log-error');
+                return;
+            }
+            if (resp && resp.code === 0) {
+                state.reported.a = true;
+                updateChip('a', true);
+                updateFlowProgress();
+                log('[a] OK — arrived at landing page', '');
+
+                // Mark show (s) and click (c) as already done upstream
+                state.reported.s = true;
+                state.reported.c = true;
+                updateChip('s', true);
+                updateChip('c', true);
+                updateFlowProgress();
+            } else {
+                log('[a] code=' + (resp ? resp.code : '?') + ' msg=' + (resp ? resp.msg : '?'), 'log-error');
+            }
+        });
+
+        // Bind complete button
+        document.getElementById('btnComplete').onclick = completeAndClaim;
+
+        // Start countdown
+        startCountdown(CONFIG.taskDuration);
+    })();
+    </script>
+</body>
+</html>
