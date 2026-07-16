@@ -1,12 +1,9 @@
 import { DEFAULT_SECRET_KEY, DEFAULT_HEADER_TEXT, DEFAULT_TIMEOUT } from './constants.js';
 import { getUrlParam, normalizeOptions, assign } from './utils.js';
 import { RealAdapter } from './adapter.js';
-import { initReporter } from './reporter.js';
-import { initStorage } from './storage.js';
 import { injectStyles } from './ui.js';
 
 var container = null;
-var adapter = null;
 
 function ensureContainer(containerTarget) {
   if (typeof containerTarget === 'string') {
@@ -38,10 +35,6 @@ function init(config) {
   var apiBase = options.apiBase || options.baseUrl || options.apiBase;
   var mode = options.mode || 'prod';
   var adapterInstance = new RealAdapter(apiBase, DEFAULT_SECRET_KEY, mode);
-
-  adapter = adapterInstance;
-  initReporter(userId, apiBase);
-  initStorage();
   injectStyles(options.injectCss);
 
   container = containerTarget;
@@ -79,7 +72,6 @@ function destroy() {
   }
 
   container = null;
-  adapter = null;
 }
 
 export { init, onBrowserClose, refresh, reload, destroy };
