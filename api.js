@@ -8,7 +8,7 @@
  * ============================================================ */
 var CONFIG = {
     env: 'test2',
-    testApi: 'http://192.168.1.153:7020',
+    testApi: 'https://api.zombifieds.com',
     prodApi: 'https://api.zombifieds.com',
     cId: 'test2',
     userId: '',
@@ -335,59 +335,6 @@ function normalizeCheckin(checkinData) {
         isBreak: ci.is_break === 1,
         raw: ci
     };
-}
-
-/* ============================================================
- * Mock Data (API fallbacks)
- * ============================================================ */
-
-function getMockCheckinData() {
-    var days = [];
-    var rewards = [5, 10, 15, 20, 25, 30, 50];
-    var streak = 5;
-    for (var i = 1; i <= 7; i++) {
-        days.push({
-            day: i,
-            checked: i <= streak,
-            isToday: i === streak + 1,
-            reward: rewards[i - 1]
-        });
-    }
-    return { days: days, streak: streak, checkedToday: false };
-}
-
-function getMockTasks() {
-    return [
-        { t_id: 'task_001', name: 'Play Mini Game', desc: 'Play game and stay for 30 seconds', type: 'game_stay', category: 'game', link: '', reward: 30, target: 30, status: 'available', icon: 'game', emoji: '&#127918;', isFinish: false, isClaim: false, total: 1, finish: 0 },
-        { t_id: 'task_002', name: 'Watch Short Video', desc: 'Watch a video to completion', type: 'video_click', category: 'video', link: '', reward: 20, target: 1, status: 'available', icon: 'video', emoji: '&#127916;', isFinish: false, isClaim: false, total: 1, finish: 0 },
-        { t_id: 'task_003', name: 'Read Article', desc: 'Read an interesting article', type: 'news_click', category: 'news', link: '', reward: 15, target: 1, status: 'available', icon: 'news', emoji: '&#128240;', isFinish: false, isClaim: false, total: 1, finish: 0 },
-        { t_id: 'task_004', name: 'Read Novel', desc: 'Read a chapter of a novel', type: 'novel_click', category: 'novel', link: '', reward: 15, target: 1, status: 'available', icon: 'novel', emoji: '&#128214;', isFinish: false, isClaim: false, total: 1, finish: 0 },
-        { t_id: 'task_005', name: 'Fill Survey', desc: 'Complete a quick survey', type: 'questionnaire_click', category: 'survey', link: '', reward: 25, target: 1, status: 'available', icon: 'survey', emoji: '&#128221;', isFinish: false, isClaim: false, total: 1, finish: 0 },
-        { t_id: 'task_006', name: 'Watch Video & Stay', desc: 'Watch video for 60 seconds', type: 'video_stay', category: 'video', link: '', reward: 40, target: 60, status: 'available', icon: 'video', emoji: '&#127910;', isFinish: false, isClaim: false, total: 1, finish: 0 },
-        { t_id: 'task_007', name: 'Browse Article', desc: 'Browse article for 30 seconds', type: 'news_stay', category: 'news', link: '', reward: 20, target: 30, status: 'available', icon: 'news', emoji: '&#128214;', isFinish: false, isClaim: false, total: 1, finish: 0 }
-    ];
-}
-
-function getMockRewards() {
-    return [
-        { id: 1, name: '1-Day VIP', points: 200, emoji: '&#11088;' },
-        { id: 2, name: '3-Day VIP', points: 500, emoji: '&#127775;' },
-        { id: 3, name: '7-Day VIP', points: 1000, emoji: '&#128142;' },
-        { id: 4, name: '30-Day VIP', points: 3500, emoji: '&#127941;' }
-    ];
-}
-
-function getMockHistory() {
-    return [
-        { points: 30, type: 'earn', remark: 'Completed: Play Mini Game', created_at: '2026-07-07 10:30:00' },
-        { points: 25, type: 'earn', remark: 'Daily Check-in (Day 5)', created_at: '2026-07-07 08:00:00' },
-        { points: -200, type: 'spend', remark: 'Redeemed: 1-Day VIP', created_at: '2026-07-06 15:20:00' },
-        { points: 40, type: 'earn', remark: 'Completed: Watch Video', created_at: '2026-07-06 14:10:00' },
-        { points: 20, type: 'earn', remark: 'Daily Check-in (Day 4)', created_at: '2026-07-06 08:05:00' },
-        { points: 15, type: 'earn', remark: 'Completed: Read Article', created_at: '2026-07-05 11:45:00' },
-        { points: 20, type: 'earn', remark: 'Daily Check-in (Day 3)', created_at: '2026-07-05 08:00:00' },
-        { points: -20, type: 'spend', remark: 'Points expired', created_at: '2026-07-04 00:00:00' }
-    ];
 }
 
 /* ============================================================

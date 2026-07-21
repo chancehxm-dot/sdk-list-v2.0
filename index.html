@@ -614,6 +614,47 @@
         .page-footer a:hover {
             color: #FF9500;
         }
+
+        /* Skeleton Screens */
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: calc(200px + 100%) 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #E5E5EA 25%, #F2F2F7 50%, #E5E5EA 75%);
+            background-size: 200px 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+        /* Points card skeleton */
+        .sk-points-label { width: 100px; height: 14px; margin-bottom: 10px; }
+        .sk-points-value { width: 140px; height: 42px; margin-bottom: 16px; border-radius: 12px; }
+        .sk-points-stats { display: flex; gap: 24px; }
+        .sk-points-stat { width: 80px; height: 16px; }
+
+        /* Check-in skeleton */
+        .sk-checkin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .sk-checkin-title { width: 100px; height: 18px; }
+        .sk-checkin-badge { width: 90px; height: 22px; border-radius: 12px; }
+        .sk-checkin-days { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 16px; }
+        .sk-checkin-day { flex: 1; text-align: center; }
+        .sk-checkin-circle { width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 6px; }
+        .sk-checkin-label { width: 28px; height: 10px; margin: 0 auto 4px; }
+        .sk-checkin-reward { width: 24px; height: 10px; margin: 0 auto; }
+        .sk-checkin-btn { width: 100%; height: 44px; border-radius: 12px; }
+
+        /* Content area skeleton (tasks/rewards) */
+        .sk-task-item { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
+        .sk-task-icon { width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0; }
+        .sk-task-info { flex: 1; min-width: 0; }
+        .sk-task-name { width: 60%; height: 16px; margin-bottom: 6px; }
+        .sk-task-desc { width: 85%; height: 12px; }
+        .sk-task-btn { width: 64px; height: 30px; border-radius: 20px; flex-shrink: 0; }
+
+        .sk-empty-state { text-align: center; padding: 40px 20px; color: #8E8E93; display: none; }
+        .sk-empty-icon { font-size: 48px; margin-bottom: 12px; }
+        .sk-empty-text { font-size: 14px; margin-bottom: 8px; }
+        .sk-retry-btn { display: inline-block; margin-top: 12px; padding: 10px 24px; border: none; border-radius: 20px; background: #FF9500; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -632,29 +673,61 @@
     <!-- Points Balance Card -->
     <div class="points-card-wrap">
         <div class="points-card">
-            <div class="points-card-label">Current Balance</div>
-            <div class="points-card-balance" id="pointsBalance">0<span class="unit">pts</span></div>
-            <div class="points-card-stats">
-                <div class="points-card-stat">
-                    <span class="stat-dot earn"></span> Earned <span class="stat-val" id="pointsEarned">0</span>
-                </div>
-                <div class="points-card-stat">
-                    <span class="stat-dot spend"></span> Spent <span class="stat-val" id="pointsSpent">0</span>
+            <!-- Skeleton -->
+            <div id="pointsCardSkeleton">
+                <div class="skeleton sk-points-label"></div>
+                <div class="skeleton sk-points-value"></div>
+                <div class="sk-points-stats">
+                    <div class="skeleton sk-points-stat"></div>
+                    <div class="skeleton sk-points-stat"></div>
                 </div>
             </div>
-            <a href="javascript:void(0)" class="points-history-link" id="showHistory">View History &#8250;</a>
+            <!-- Real content (hidden until data loads) -->
+            <div id="pointsCardContent" style="display:none;">
+                <div class="points-card-label">Current Balance</div>
+                <div class="points-card-balance" id="pointsBalance">0<span class="unit">pts</span></div>
+                <div class="points-card-stats">
+                    <div class="points-card-stat">
+                        <span class="stat-dot earn"></span> Earned <span class="stat-val" id="pointsEarned">0</span>
+                    </div>
+                    <div class="points-card-stat">
+                        <span class="stat-dot spend"></span> Spent <span class="stat-val" id="pointsSpent">0</span>
+                    </div>
+                </div>
+                <a href="javascript:void(0)" class="points-history-link" id="showHistory">View History &#8250;</a>
+            </div>
         </div>
     </div>
 
     <!-- 7-Day Check-in -->
     <div class="checkin-wrap">
         <div class="checkin-card">
-            <div class="checkin-header">
-                <div class="checkin-title">Daily Check-in</div>
-                <div class="checkin-streak" id="streakBadge">Streak: 0 days</div>
+            <!-- Skeleton -->
+            <div id="checkinSkeleton">
+                <div class="sk-checkin-header">
+                    <div class="skeleton sk-checkin-title"></div>
+                    <div class="skeleton sk-checkin-badge"></div>
+                </div>
+                <div class="sk-checkin-days">
+                    <div class="sk-checkin-day"><div class="skeleton sk-checkin-circle"></div><div class="skeleton sk-checkin-label"></div><div class="skeleton sk-checkin-reward"></div></div>
+                    <div class="sk-checkin-day"><div class="skeleton sk-checkin-circle"></div><div class="skeleton sk-checkin-label"></div><div class="skeleton sk-checkin-reward"></div></div>
+                    <div class="sk-checkin-day"><div class="skeleton sk-checkin-circle"></div><div class="skeleton sk-checkin-label"></div><div class="skeleton sk-checkin-reward"></div></div>
+                    <div class="sk-checkin-day"><div class="skeleton sk-checkin-circle"></div><div class="skeleton sk-checkin-label"></div><div class="skeleton sk-checkin-reward"></div></div>
+                    <div class="sk-checkin-day"><div class="skeleton sk-checkin-circle"></div><div class="skeleton sk-checkin-label"></div><div class="skeleton sk-checkin-reward"></div></div>
+                    <div class="sk-checkin-day"><div class="skeleton sk-checkin-circle"></div><div class="skeleton sk-checkin-label"></div><div class="skeleton sk-checkin-reward"></div></div>
+                    <div class="sk-checkin-day"><div class="skeleton sk-checkin-circle"></div><div class="skeleton sk-checkin-label"></div><div class="skeleton sk-checkin-reward"></div></div>
+                </div>
+                <div class="skeleton sk-checkin-btn"></div>
             </div>
-            <div class="checkin-days" id="checkinDays"></div>
-            <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">Check In Today</button>
+            <!-- Real content (hidden until data loads) -->
+            <div id="checkinContent" style="display:none;">
+                <div class="checkin-header">
+                    <div class="checkin-title">Daily Check-in</div>
+                    <div class="checkin-streak" id="streakBadge">Streak: 0 days</div>
+                </div>
+                <div class="checkin-days" id="checkinDays"></div>
+                <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">Check In Today</button>
+            </div>
         </div>
     </div>
 
@@ -665,7 +738,23 @@
     </div>
 
     <!-- Content Area -->
-    <div class="content-wrap" id="contentArea"></div>
+    <div class="content-wrap" id="contentArea">
+        <!-- Skeleton (visible during loading) -->
+        <div id="contentSkeleton">
+            <div class="sk-task-item"><div class="skeleton sk-task-icon"></div><div class="sk-task-info"><div class="skeleton sk-task-name"></div><div class="skeleton sk-task-desc"></div></div><div class="skeleton sk-task-btn"></div></div>
+            <div class="sk-task-item"><div class="skeleton sk-task-icon"></div><div class="sk-task-info"><div class="skeleton sk-task-name"></div><div class="skeleton sk-task-desc"></div></div><div class="skeleton sk-task-btn"></div></div>
+            <div class="sk-task-item"><div class="skeleton sk-task-icon"></div><div class="sk-task-info"><div class="skeleton sk-task-name"></div><div class="skeleton sk-task-desc"></div></div><div class="skeleton sk-task-btn"></div></div>
+            <div class="sk-task-item"><div class="skeleton sk-task-icon"></div><div class="sk-task-info"><div class="skeleton sk-task-name"></div><div class="skeleton sk-task-desc"></div></div><div class="skeleton sk-task-btn"></div></div>
+        </div>
+        <!-- Real content (hidden until data loads) -->
+        <div id="contentReal" style="display:none;"></div>
+        <!-- Empty/Error state (hidden by default) -->
+        <div class="sk-empty-state" id="contentEmpty">
+            <div class="sk-empty-icon">&#9888;</div>
+            <div class="sk-empty-text" id="contentEmptyText">Failed to load content</div>
+            <button class="sk-retry-btn" onclick="refreshAll()">Tap to Retry</button>
+        </div>
+    </div>
 
     <!-- Footer -->
     <div class="page-footer">
@@ -750,6 +839,25 @@
         setTimeout(function() {
             toast.classList.remove('show');
         }, 2000);
+    }
+
+    function showSkeletons() {
+        document.getElementById('pointsCardSkeleton').style.display = 'block';
+        document.getElementById('checkinSkeleton').style.display = 'block';
+        document.getElementById('contentSkeleton').style.display = 'block';
+        document.getElementById('pointsCardContent').style.display = 'none';
+        document.getElementById('checkinContent').style.display = 'none';
+        document.getElementById('contentReal').style.display = 'none';
+        document.getElementById('contentEmpty').style.display = 'none';
+    }
+
+    function hideSkeletons() {
+        document.getElementById('pointsCardSkeleton').style.display = 'none';
+        document.getElementById('checkinSkeleton').style.display = 'none';
+        document.getElementById('contentSkeleton').style.display = 'none';
+        document.getElementById('pointsCardContent').style.display = 'block';
+        document.getElementById('checkinContent').style.display = 'block';
+        document.getElementById('contentReal').style.display = 'block';
     }
 
     /* ============================================================
@@ -845,7 +953,7 @@
             html += '</div>';
         }
 
-        document.getElementById('contentArea').innerHTML = html;
+        document.getElementById('contentReal').innerHTML = html;
     }
 
     function renderRewards() {
@@ -868,7 +976,7 @@
         }
 
         html += '</div>';
-        document.getElementById('contentArea').innerHTML = html;
+        document.getElementById('contentReal').innerHTML = html;
     }
 
     function renderHistory() {
@@ -876,11 +984,9 @@
         document.getElementById('historyList').innerHTML = html;
 
         fetchPoints(function(err, data) {
-            var list;
+            var list = [];
             if (!err && data && data.lists) {
                 list = data.lists;
-            } else {
-                list = getMockHistory();
             }
 
             html = '';
@@ -1130,11 +1236,9 @@
     /**
      * Refresh all state from the server.
      * Uses fetchTaskLists() (tasks + points + checkin in one call).
-     * Falls back to mock data on failure.
+     * Shows empty state on failure.
      */
     function refreshAll() {
-        showLoading('Loading...');
-
         fetchTaskLists(function(err, data) {
             if (!err && data) {
                 state.tasks = data.tasks || [];
@@ -1146,12 +1250,14 @@
                     state.checkedToday = data.checkin.checkedToday;
                 }
             } else {
-                // API failed — use mock data
-                var checkinData = getMockCheckinData();
-                state.checkinDays = checkinData.days;
-                state.streak = checkinData.streak;
-                state.tasks = getMockTasks();
-                state.points = 1280;
+                // API failed — show empty state
+                hideSkeletons();
+                document.getElementById('contentReal').style.display = 'none';
+                document.getElementById('contentEmpty').style.display = 'block';
+                document.getElementById('contentEmptyText').textContent = 'Failed to load. Check your connection and try again.';
+                renderPointsCard();
+                renderCheckin();
+                return;
             }
 
             // Rewards still come from a separate endpoint
@@ -1161,10 +1267,10 @@
                 } else if (!err2 && data2 && data2.length !== undefined) {
                     state.rewards = data2;
                 } else {
-                    state.rewards = getMockRewards();
+                    state.rewards = [];
                 }
 
-                hideLoading();
+                hideSkeletons();
                 renderPointsCard();
                 renderCheckin();
                 if (state.currentTab === 'tasks') {
@@ -1180,19 +1286,7 @@
      * Initialize
      * ============================================================ */
     function init() {
-        // Seed initial UI from mock data (replaced when API responds)
-        var checkinData = getMockCheckinData();
-        state.checkinDays = checkinData.days;
-        state.streak = checkinData.streak;
-        state.tasks = getMockTasks();
-        state.points = 1280;
-        state.earned = 260;
-        state.spent = 220;
-
-        renderCheckin();
-        renderTasks();
-        renderPointsCard();
-
+        // Skeletons are already visible in the static HTML
         // Load real data from API
         refreshAll();
 
