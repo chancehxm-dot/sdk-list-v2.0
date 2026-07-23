@@ -1192,24 +1192,19 @@
             }
 
             apiClaim(task.t_id, function(err2, resp2) {
-                hideLoading();
                 if (err2) {
+                    hideLoading();
                     showToast('Failed to claim points', 'error');
                     return;
                 }
 
                 if (resp2 && resp2.code === 0) {
-                    state.points += task.reward;
-                    state.earned += task.reward;
-                    renderPointsCard();
                     showToast('Reward claimed! +' + task.reward + ' pts', 'success');
-
-                    // Update task locally
-                    task.status = 'done';
-                    task.isFinish = true;
-                    task.isClaim = true;
-                    renderTasks();
+                    // Refresh from server — normalizeTask reads is_claim=1
+                    // as status='done', so the button shows "✓ Done" permanently.
+                    refreshAll();
                 } else {
+                    hideLoading();
                     showToast((resp2 && resp2.msg) || 'Claim failed', 'error');
                 }
             });

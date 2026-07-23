@@ -265,7 +265,9 @@ function normalizeTask(raw) {
     // Force manual Claim interaction — even on refresh.
     // 'done' only set locally after user clicks Claim in this session.
     var status = 'available';
-    if (raw.is_finish === 1) {
+    if (raw.is_claim === 1) {
+        status = 'done';
+    } else if (raw.is_finish === 1) {
         status = 'claim';
     }
 
