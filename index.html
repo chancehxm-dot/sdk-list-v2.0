@@ -1022,7 +1022,28 @@
         if (tab === 'tasks') {
             renderTasks();
         } else {
-            renderRewards();
+            // Show skeleton while loading rewards from API
+            document.getElementById('contentReal').style.display = 'none';
+            document.getElementById('contentSkeleton').style.display = 'block';
+            document.getElementById('contentEmpty').style.display = 'none';
+
+            fetchRewards(function(err, data) {
+                document.getElementById('contentSkeleton').style.display = 'none';
+                document.getElementById('contentReal').style.display = 'block';
+
+                if (!err && data && data.lists) {
+                    state.rewards = data.lists;
+                    renderRewards();
+                } else if (!err && data && data.length !== undefined) {
+                    state.rewards = data;
+                    renderRewards();
+                } else {
+                    state.rewards = [];
+                    document.getElementById('contentReal').style.display = 'none';
+                    document.getElementById('contentEmpty').style.display = 'block';
+                    document.getElementById('contentEmptyText').textContent = 'Failed to load rewards. Tap to retry.';
+                }
+            });
         }
     }
 
