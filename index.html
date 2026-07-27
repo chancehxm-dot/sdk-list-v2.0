@@ -813,6 +813,8 @@
     <script src="/libs/crypto-js.min.js"></script>
     <!-- API 层：配置管理、HTTP 请求工具、业务接口 -->
     <script src="api.js"></script>
+    <!-- 原生桥接层：WebView JSNative 通信 -->
+    <script src="native.js"></script>
 
     <script>
     /* ============================================================
@@ -1119,7 +1121,7 @@
         if (task.type === 'h5') {
             startH5Task(task);
         } else if (task.type === 'ad') {
-            showToast('Ad tasks coming soon', 'error');
+            startVideoTask(task);
         } else if (task.type === 'api') {
             startApiTask(task);
         } else {
@@ -1157,11 +1159,12 @@
             }
 
             // 生产环境：直接跳转链接或调用 landing API
+            // 优先使用原生 Chrome Tab（WebView 环境），不可用时降级为 location.href
             if (task.link) {
                 hideLoading();
                 showToast('Task started! Complete it to earn ' + task.reward + ' pts', 'success');
                 apiReport(task.t_id, 'a', window.location.hostname, function() {});
-                window.location.href = task.link;
+                openTaskUrl(task.t_id, task.link);
                 return;
             }
 
@@ -1182,7 +1185,7 @@
                 if (landingUrl) {
                     showToast('Task started! Complete it to earn ' + task.reward + ' pts', 'success');
                     apiReport(task.t_id, 'a', window.location.hostname, function() {});
-                    window.location.href = landingUrl;
+                    openTaskUrl(task.t_id, landingUrl);
                 } else {
                     showToast('Failed to load task page', 'error');
                 }
@@ -1200,6 +1203,87 @@
                 return;
             }
             showToast('Task started! Complete the action to earn ' + task.reward + ' pts', 'success');
+        });
+    }
+
+    /**
+     * 打开任务落地页 URL。
+     * WebView 中优先使用原生 Chrome Tab，浏览器中降级为 location.href。
+     * Chrome 关闭后自动刷新任务列表，让用户看到最新状态。
+     */
+    function openTaskUrl(taskId, url) {
+        if (NativeBridge.isAvailable) {
+            NativeBridge.openChrome(taskId, url, function(err) {
+                if (!err) {
+                    // Chrome 正常关闭，刷新任务看是否有可领取的
+                    console.log('[app] Chrome closed, refreshing tasks');
+                    refreshAll();
+                }
+            });
+        } else {
+            window.location.href = url;
+        }
+    }
+
+    /**
+     * 启动激励视频任务：上报点击 → 播放视频 → 完成后自动领取。
+     * 需要原生 JSNative 支持，不可用时提示升级。
+     */
+    function startVideoTask(task) {
+        if (!NativeBridge.isAvailable) {
+            showToast('Video ads require the latest app version', 'error');
+            return;
+        }
+
+        showLoading('Loading video...');
+
+        // 上报点击
+        apiReport(task.t_id, 'c', '', function(err) {
+            if (err) {
+                hideLoading();
+                showToast('Failed to start video', 'error');
+                return;
+            }
+
+            hideLoading();
+            showToast('Watch the video to earn ' + task.reward + ' pts', 'success');
+
+            // 播放激励视频
+            NativeBridge.openVideo(task.t_id, function(err2) {
+                if (err2) {
+                    console.log('[app] Video failed: ' + err2.message);
+                    showToast('Video did not complete. Please try again.', 'error');
+                    return;
+                }
+
+                // 视频播放成功 → 自动上报完成并领取
+                showLoading('Claiming reward...');
+
+                apiReport(task.t_id, 'f', '', function(err3) {
+                    if (err3) {
+                        hideLoading();
+                        showToast('Failed to report task', 'error');
+                        return;
+                    }
+
+                    apiClaim(task.t_id, function(err4, resp4) {
+                        if (err4) {
+                            hideLoading();
+                            showToast('Failed to claim points', 'error');
+                            return;
+                        }
+
+                        if (resp4 && resp4.code === 0) {
+                            hideLoading();
+                            showToast('Reward claimed! +' + task.reward + ' pts', 'success');
+                            refreshAll();
+                        } else {
+                            hideLoading();
+                            showToast((resp4 && resp4.msg) || 'Claim failed', 'error');
+                        }
+                    });
+                });
+            });
         });
     }
 
