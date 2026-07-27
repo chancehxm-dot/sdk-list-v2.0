@@ -14,7 +14,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Prod: minimal loading */
+        /* 生产环境：简洁加载页 */
         .loading-center {
             display: flex;
             flex-direction: column;
@@ -36,7 +36,7 @@
         .status-text { font-size: 16px; color: #636366; line-height: 1.5; max-width: 280px; }
         .status-sub { font-size: 13px; color: #8E8E93; margin-top: 8px; }
 
-        /* Test: debug panel */
+        /* 测试环境：调试面板 */
         .debug-wrap { padding: 16px 16px 100px; }
         .debug-header {
             text-align: center; padding: 16px 0;
@@ -92,14 +92,14 @@
 </head>
 <body>
 
-    <!-- PROD: simple loading spinner -->
+    <!-- 生产环境：简洁加载动画 -->
     <div id="prodView" class="loading-center" style="display:none;">
         <div class="spinner"></div>
         <p class="status-text" id="prodStatus">Processing your request, please wait...</p>
         <p class="status-sub" id="prodSub"></p>
     </div>
 
-    <!-- TEST: full debug panel -->
+    <!-- 测试环境：完整调试面板 -->
     <div id="testView" style="display:none;">
         <div class="debug-wrap">
             <div class="debug-header">
@@ -108,44 +108,44 @@
                 <div class="debug-sub">go.html — API request + AES decrypt inspector</div>
             </div>
 
-            <!-- 1. Input params -->
+            <!-- 1. 输入参数 -->
             <div class="card">
                 <div class="card-title">1. Input Parameters</div>
                 <div id="paramsKv"></div>
             </div>
 
-            <!-- 2. Sign build -->
+            <!-- 2. 签名构建 -->
             <div class="card">
                 <div class="card-title">2. Sign Build</div>
                 <div id="signKv"></div>
             </div>
 
-            <!-- 3. API response -->
+            <!-- 3. API 响应 -->
             <div class="card">
                 <div class="card-title">3. API Response</div>
                 <div id="apiKv"></div>
                 <div class="log-area" id="apiRaw" style="margin-top:8px;max-height:120px;"></div>
             </div>
 
-            <!-- 4. AES Decrypt -->
+            <!-- 4. AES 解密 -->
             <div class="card">
                 <div class="card-title">4. AES-128-CBC Decrypt</div>
                 <div id="aesKv"></div>
             </div>
 
-            <!-- 5. Decrypted Result -->
+            <!-- 5. 解密结果 -->
             <div class="card">
                 <div class="card-title">5. Decrypted Landing URL</div>
                 <div class="log-area" id="decryptedResult" style="max-height:80px;text-align:center;font-size:14px;"></div>
             </div>
 
-            <!-- 6. Log -->
+            <!-- 6. 控制台日志 -->
             <div class="card">
                 <div class="card-title">6. Console Log</div>
                 <div class="log-area" id="logArea"></div>
             </div>
 
-            <!-- Actions -->
+            <!-- 操作按钮 -->
             <button class="btn btn-go" id="btnGoDemo" disabled>Go to Task Demo</button>
             <button class="btn btn-retry" id="btnRetry" style="display:none;">Retry API Call</button>
         </div>
@@ -154,7 +154,7 @@
     <script src="/libs/crypto-js.min.js"></script>
     <script>
     /* ============================================================
-     * Configuration
+     * 配置
      * ============================================================ */
     var CONFIG = {
         env: 'prod',
@@ -167,7 +167,7 @@
     var IS_PROD = (CONFIG.env === 'prod');
 
     /* ============================================================
-     * Utility
+     * 工具函数
      * ============================================================ */
 
     function getParam(name) {
@@ -221,7 +221,7 @@
     }
 
     /* ============================================================
-     * Debug UI Helpers
+     * 调试 UI 工具函数
      * ============================================================ */
 
     var logLines = [];
@@ -292,7 +292,7 @@
     }
 
     /* ============================================================
-     * API Call
+     * API 调用
      * ============================================================ */
 
     function reportArrival(callback) {
@@ -316,7 +316,7 @@
         appLog('arrival body: ' + body, '');
 
         var done = false;
-        // Safety: ensure callback fires at most once, within 3s max
+        // 安全保护：确保回调最多触发一次，最长 3 秒
         function safeDone() {
             if (done) return;
             done = true;
@@ -324,7 +324,7 @@
         }
         var safetyTimer = setTimeout(safeDone, 3000);
 
-        // Prefer fetch+keepalive: more reliable than sendBeacon for JSON
+        // 优先使用 fetch+keepalive：发送 JSON 比 sendBeacon 更可靠
         if (typeof fetch === 'function') {
             try {
                 fetch(url, {
@@ -424,7 +424,7 @@
     }
 
     /* ============================================================
-     * Entry
+     * 入口
      * ============================================================ */
 
     (function() {
@@ -454,21 +454,21 @@
             return;
         }
 
-        // Auto-generate ts/sign if missing
+        // 缺失时自动生成 ts/sign
         if (!CONFIG.ts) CONFIG.ts = getTs();
         CONFIG.signRaw = CONFIG.cId + CONFIG.tId + CONFIG.ts;
         if (!CONFIG.sign && CONFIG.secretKey) {
             CONFIG.sign = CryptoJS.MD5(CONFIG.signRaw + CONFIG.secretKey).toString();
         }
 
-        // Report arrival (act=a) to task API, then proceed
+        // 上报到达行为（act=a），然后继续后续流程
         reportArrival(function() {
             doRedirect();
         });
 
         function doRedirect() {
         // ============================================================
-        // PROD MODE: silent redirect
+        // 生产模式：静默跳转
         // ============================================================
         if (IS_PROD) {
             document.getElementById('prodView').style.display = 'flex';
@@ -493,7 +493,7 @@
         }
 
         // ============================================================
-        // TEST MODE: full debug UI — stays on page
+        // 测试模式：完整调试面板 — 停留在当前页面
         // ============================================================
         document.getElementById('testView').style.display = 'block';
 
@@ -528,7 +528,7 @@
                 appLog('DECRYPT SUCCESS!', '');
                 document.getElementById('decryptedResult').innerHTML = '<span style="color:#34C759;font-weight:700;">' + landingUrl + '</span>';
 
-                // Enable "Go to Task Demo" button
+                // 启用"前往任务演示"按钮
                 var demoUrl = 'task-demo.html?c_id=' + encodeURIComponent(CONFIG.cId)
                     + '&t_id=' + encodeURIComponent(CONFIG.tId)
                     + '&user_id=' + encodeURIComponent(CONFIG.userId);

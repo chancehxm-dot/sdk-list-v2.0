@@ -37,7 +37,7 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Header */
+        /* 顶部导航栏 */
         .header {
             background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%);
             padding: 16px 20px;
@@ -89,7 +89,7 @@
             height: 22px;
         }
 
-        /* Points Card */
+        /* 积分卡片 */
         .points-card-wrap {
             padding: 16px;
         }
@@ -152,7 +152,7 @@
             font-weight: 600;
         }
 
-        /* 7-Day Check-in */
+        /* 七日签到 */
         .checkin-wrap {
             padding: 0 16px 16px;
         }
@@ -266,7 +266,7 @@
             background: #34C759;
         }
 
-        /* Tab Bar */
+        /* 标签栏 */
         .tab-bar {
             display: flex;
             margin: 0 16px;
@@ -296,7 +296,7 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
 
-        /* Task List */
+        /* 任务列表 */
         .content-wrap {
             padding: 12px 16px;
         }
@@ -384,7 +384,7 @@
             margin-top: 2px;
         }
 
-        /* Rewards Grid */
+        /* 奖品网格 */
         .rewards-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -445,7 +445,7 @@
             cursor: not-allowed;
         }
 
-        /* Loading Overlay */
+        /* 加载遮罩 */
         .loading-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -485,7 +485,7 @@
             line-height: 1.5;
         }
 
-        /* Toast */
+        /* 轻提示 */
         .toast {
             position: fixed;
             top: 50%;
@@ -511,7 +511,7 @@
         .toast.success { background: rgba(52, 199, 89, 0.9); }
         .toast.error { background: rgba(255, 59, 48, 0.9); }
 
-        /* Points History Modal */
+        /* 积分历史弹窗 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -598,7 +598,7 @@
         .history-item-pts.earn { color: #34C759; }
         .history-item-pts.spend { color: #FF3B30; }
 
-        /* Empty state */
+        /* 空状态 */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -612,7 +612,7 @@
             font-size: 14px;
         }
 
-        /* Footer */
+        /* 页脚 */
         .page-footer {
             text-align: center;
             padding: 20px 16px;
@@ -628,7 +628,7 @@
             color: #FF9500;
         }
 
-        /* Skeleton Screens */
+        /* 骨架屏 */
         @keyframes shimmer {
             0% { background-position: -200px 0; }
             100% { background-position: calc(200px + 100%) 0; }
@@ -639,13 +639,13 @@
             animation: shimmer 1.5s infinite;
             border-radius: 8px;
         }
-        /* Points card skeleton */
+        /* 积分卡片骨架 */
         .sk-points-label { width: 100px; height: 14px; margin-bottom: 10px; }
         .sk-points-value { width: 140px; height: 42px; margin-bottom: 16px; border-radius: 12px; }
         .sk-points-stats { display: flex; gap: 24px; }
         .sk-points-stat { width: 80px; height: 16px; }
 
-        /* Check-in skeleton */
+        /* 签到骨架 */
         .sk-checkin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .sk-checkin-title { width: 100px; height: 18px; }
         .sk-checkin-badge { width: 90px; height: 22px; border-radius: 12px; }
@@ -656,7 +656,7 @@
         .sk-checkin-reward { width: 24px; height: 10px; margin: 0 auto; }
         .sk-checkin-btn { width: 100%; height: 44px; border-radius: 12px; }
 
-        /* Content area skeleton (tasks/rewards) */
+        /* 内容区骨架（任务/奖品） */
         .sk-task-item { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
         .sk-task-icon { width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0; }
         .sk-task-info { flex: 1; min-width: 0; }
@@ -672,7 +672,7 @@
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- 顶部导航栏 -->
     <div class="header">
         <div class="header-top">
             <div class="header-back" onclick="history.back()">
@@ -691,10 +691,10 @@
         </div>
     </div>
 
-    <!-- Points Balance Card -->
+    <!-- 积分余额卡片 -->
     <div class="points-card-wrap">
         <div class="points-card">
-            <!-- Skeleton -->
+            <!-- 骨架屏占位 -->
             <div id="pointsCardSkeleton">
                 <div class="skeleton sk-points-label"></div>
                 <div class="skeleton sk-points-value"></div>
@@ -703,7 +703,7 @@
                     <div class="skeleton sk-points-stat"></div>
                 </div>
             </div>
-            <!-- Real content (hidden until data loads) -->
+            <!-- 真实内容（数据加载完成后显示） -->
             <div id="pointsCardContent" style="display:none;">
                 <div class="points-card-label">Current Balance</div>
                 <div class="points-card-balance" id="pointsBalance">0<span class="unit">pts</span></div>
@@ -720,10 +720,10 @@
         </div>
     </div>
 
-    <!-- 7-Day Check-in -->
+    <!-- 七日签到 -->
     <div class="checkin-wrap">
         <div class="checkin-card">
-            <!-- Skeleton -->
+            <!-- 骨架屏占位 -->
             <div id="checkinSkeleton">
                 <div class="sk-checkin-header">
                     <div class="skeleton sk-checkin-title"></div>
@@ -740,7 +740,7 @@
                 </div>
                 <div class="skeleton sk-checkin-btn"></div>
             </div>
-            <!-- Real content (hidden until data loads) -->
+            <!-- 真实内容（数据加载完成后显示） -->
             <div id="checkinContent" style="display:none;">
                 <div class="checkin-header">
                     <div class="checkin-title">Daily Check-in</div>
@@ -752,24 +752,24 @@
         </div>
     </div>
 
-    <!-- Tab Bar -->
+    <!-- 标签栏 -->
     <div class="tab-bar">
         <button class="tab-btn active" id="tabTasks" onclick="switchTab('tasks')">Tasks</button>
         <button class="tab-btn" id="tabExchange" onclick="switchTab('exchange')">Exchange</button>
     </div>
 
-    <!-- Content Area -->
+    <!-- 内容区域 -->
     <div class="content-wrap" id="contentArea">
-        <!-- Skeleton (visible during loading) -->
+        <!-- 骨架屏占位（加载中可见） -->
         <div id="contentSkeleton">
             <div class="sk-task-item"><div class="skeleton sk-task-icon"></div><div class="sk-task-info"><div class="skeleton sk-task-name"></div><div class="skeleton sk-task-desc"></div></div><div class="skeleton sk-task-btn"></div></div>
             <div class="sk-task-item"><div class="skeleton sk-task-icon"></div><div class="sk-task-info"><div class="skeleton sk-task-name"></div><div class="skeleton sk-task-desc"></div></div><div class="skeleton sk-task-btn"></div></div>
             <div class="sk-task-item"><div class="skeleton sk-task-icon"></div><div class="sk-task-info"><div class="skeleton sk-task-name"></div><div class="skeleton sk-task-desc"></div></div><div class="skeleton sk-task-btn"></div></div>
             <div class="sk-task-item"><div class="skeleton sk-task-icon"></div><div class="sk-task-info"><div class="skeleton sk-task-name"></div><div class="skeleton sk-task-desc"></div></div><div class="skeleton sk-task-btn"></div></div>
         </div>
-        <!-- Real content (hidden until data loads) -->
+        <!-- 真实内容（数据加载完成后显示） -->
         <div id="contentReal" style="display:none;"></div>
-        <!-- Empty/Error state (hidden by default) -->
+        <!-- 空/错误状态（默认隐藏） -->
         <div class="sk-empty-state" id="contentEmpty">
             <div class="sk-empty-icon">&#9888;</div>
             <div class="sk-empty-text" id="contentEmptyText">Failed to load content</div>
@@ -777,7 +777,7 @@
         </div>
     </div>
 
-    <!-- Footer -->
+    <!-- 页脚 -->
     <div class="page-footer">
         <a href="privacy.html">Privacy Policy</a> |
         <a href="terms.html">Terms of Service</a> |
@@ -785,7 +785,7 @@
         <div style="margin-top:6px;">&copy; 2026 Points Center. All rights reserved.</div>
     </div>
 
-    <!-- Loading Overlay -->
+    <!-- 加载遮罩 -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-box">
             <div class="loading-spinner"></div>
@@ -793,10 +793,10 @@
         </div>
     </div>
 
-    <!-- Toast -->
+    <!-- 轻提示 -->
     <div class="toast" id="toast"></div>
 
-    <!-- Points History Modal -->
+    <!-- 积分历史弹窗 -->
     <div class="modal-overlay" id="historyModal">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
@@ -808,15 +808,15 @@
         </div>
     </div>
 
-    <!-- crypto.js: zero-dependency MD5 + AES (loaded first) -->
+    <!-- crypto.js：零依赖 MD5 + AES（最先加载） -->
     <!-- <script src="crypto.js"></script> -->
     <script src="/libs/crypto-js.min.js"></script>
-    <!-- API Layer: configuration, HTTP helpers, API functions -->
+    <!-- API 层：配置管理、HTTP 请求工具、业务接口 -->
     <script src="api.js"></script>
 
     <script>
     /* ============================================================
-     * App State
+     * 应用状态
      * ============================================================ */
     var state = {
         currentTab: 'tasks',
@@ -833,7 +833,7 @@
     };
 
     /* ============================================================
-     * UI Helpers
+     * UI 工具函数
      * ============================================================ */
     function showLoading(text) {
         var overlay = document.getElementById('loadingOverlay');
@@ -882,7 +882,7 @@
     }
 
     /* ============================================================
-     * Render Functions
+     * 渲染函数
      * ============================================================ */
 
     function renderPointsCard() {
@@ -955,7 +955,7 @@
                 btnHtml = 'Go';
             }
 
-            // Show progress for multi-count tasks (total > 1)
+            // 多步任务显示进度（total > 1）
             var countInfo = '';
             if (t.total > 1) {
                 countInfo = '<div class="task-desc" style="color:#FF9500">' + t.finish + '/' + t.total + ' completed</div>';
@@ -1033,7 +1033,7 @@
     }
 
     /* ============================================================
-     * Actions
+     * 用户操作
      * ============================================================ */
 
     function switchTab(tab) {
@@ -1044,7 +1044,7 @@
         if (tab === 'tasks') {
             renderTasks();
         } else {
-            // Show skeleton while loading rewards from API
+            // 加载奖品时显示骨架屏
             document.getElementById('contentReal').style.display = 'none';
             document.getElementById('contentSkeleton').style.display = 'block';
             document.getElementById('contentEmpty').style.display = 'none';
@@ -1093,8 +1093,8 @@
     }
 
     /**
-     * Unified task dispatch: finds task in state, then routes to
-     * the correct action based on status (claim) or type (h5/ad/api).
+     * 统一任务分发：从 state 中查找任务，根据状态（claim）或类型（h5/ad/api）
+     * 路由到对应操作。
      */
     function handleTask(tId) {
         var task = null;
@@ -1106,16 +1106,16 @@
         }
         if (!task) return;
 
-        // Claim points for finished-but-unclaimed tasks
+        // 已完成但未领取的任务 → 领取积分
         if (task.status === 'claim') {
             claimTask(task);
             return;
         }
 
-        // Already done
+        // 已完成的任务，不再处理
         if (task.status === 'done') return;
 
-        // Dispatch by task type
+        // 按任务类型分发
         if (task.type === 'h5') {
             startH5Task(task);
         } else if (task.type === 'ad') {
@@ -1123,12 +1123,12 @@
         } else if (task.type === 'api') {
             startApiTask(task);
         } else {
-            // Unknown type — try h5 flow
+            // 未知类型 — 尝试 h5 流程
             startH5Task(task);
         }
     }
 
-    /** Start an h5 task: report click, open landing page */
+    /** 启动 h5 任务：上报点击，打开落地页 */
     function startH5Task(task) {
         showLoading('Loading task...');
 
@@ -1139,7 +1139,7 @@
                 return;
             }
 
-            // Test/local env: redirect to go.html transit page
+            // 测试/本地环境：跳转到 go.html 中转页
             if (CONFIG.env !== 'prod') {
                 hideLoading();
                 var goTs = getTs();
@@ -1156,7 +1156,7 @@
                 return;
             }
 
-            // Prod: direct link or landing API
+            // 生产环境：直接跳转链接或调用 landing API
             if (task.link) {
                 hideLoading();
                 showToast('Task started! Complete it to earn ' + task.reward + ' pts', 'success');
@@ -1190,7 +1190,7 @@
         });
     }
 
-    /** Start an API-based task (report click only, no redirect) */
+    /** 启动 API 型任务（仅上报点击，不跳转） */
     function startApiTask(task) {
         showLoading('Loading task...');
         apiReport(task.t_id, 'c', '', function(err) {
@@ -1203,7 +1203,7 @@
         });
     }
 
-    /** Claim points for a finished task */
+    /** 领取已完成任务的积分奖励 */
     function claimTask(task) {
         showLoading('Claiming reward...');
 
@@ -1224,8 +1224,8 @@
                 if (resp2 && resp2.code === 0) {
                     hideLoading();
                     showToast('Reward claimed! +' + task.reward + ' pts', 'success');
-                    // Refresh from server — normalizeTask reads is_claim=1
-                    // as status='done', so the button shows "✓ Done" permanently.
+                    // 从服务端刷新 — normalizeTask 将 is_claim=1 映射为
+                    // status='done'，使按钮持久显示"✓ Done"。
                     refreshAll();
                 } else {
                     hideLoading();
@@ -1271,13 +1271,13 @@
     }
 
     /* ============================================================
-     * Data Refresh
+     * 数据刷新
      * ============================================================ */
 
     /**
-     * Refresh all state from the server.
-     * Uses fetchTaskLists() (tasks + points + checkin in one call).
-     * Shows empty state on failure.
+     * 从服务端刷新全部状态。
+     * 使用 fetchTaskLists() 一次请求获取任务+积分+签到。
+     * 失败时展示空状态。
      */
     function refreshAll() {
         fetchTaskLists(function(err, data) {
@@ -1291,7 +1291,7 @@
                     state.checkedToday = data.checkin.checkedToday;
                 }
             } else {
-                // API failed — show empty state
+                // API 请求失败 — 显示空状态
                 hideSkeletons();
                 document.getElementById('contentReal').style.display = 'none';
                 document.getElementById('contentEmpty').style.display = 'block';
@@ -1301,7 +1301,7 @@
                 return;
             }
 
-            // Rewards still come from a separate endpoint
+            // 奖品数据来自独立接口
             fetchRewards(function(err2, data2) {
                 if (!err2 && data2 && data2.lists) {
                     state.rewards = data2.lists;
@@ -1324,11 +1324,11 @@
     }
 
     /* ============================================================
-     * Initialize
+     * 初始化
      * ============================================================ */
     /**
-     * Build dynamic URLs that carry user context (CONFIG params).
-     * Add new targets here — the pattern is always the same.
+     * 构建携带用户上下文的动态 URL。
+     * 新增外部链接参考此模式添加即可。
      */
     function buildDynamicUrls() {
         var base = 'https://zombifieds.com/feedback.html';
@@ -1343,14 +1343,13 @@
     }
 
     function init() {
-        // Build dynamic URLs from CONFIG before anything else
+        // 首先根据 CONFIG 构建动态 URL
         buildDynamicUrls();
 
-        // Skeletons are already visible in the static HTML
-        // Load real data from API
+        // 静态 HTML 中骨架屏已就位，从 API 加载真实数据
         refreshAll();
 
-        // Modal: click overlay dismisses
+        // 弹窗：点击遮罩层关闭
         document.getElementById('historyModal').addEventListener('click', function(e) {
             if (e.target === this) closeHistory();
         });

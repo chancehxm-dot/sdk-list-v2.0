@@ -1,19 +1,19 @@
 /**
- * crypto.js — Zero-dependency crypto utilities (ES5)
- * Pure JavaScript: MD5, Base64 decode, AES-128-CBC decryption.
- * Works in ALL browser contexts (HTTP, HTTPS, WebView, local file://).
+ * crypto.js — 零依赖加解密工具（ES5）
+ * 纯 JavaScript：MD5、Base64 解码、AES-128-CBC 解密。
+ * 兼容所有浏览器环境（HTTP、HTTPS、WebView、本地 file://）。
  *
- * Key derivation matches server:
+ * 密钥派生与服务端一致：
  *   raw    = ts + secretKey
  *   keyMd5 = md5(raw)
- *   KEY    = keyMd5.substring(0, 16) as UTF-8 bytes (16 bytes)
- *   IV     = keyMd5.substring(16)   as UTF-8 bytes (16 bytes)
+ *   KEY    = keyMd5.substring(0, 16) 作为 UTF-8 字节（16 字节）
+ *   IV     = keyMd5.substring(16)     作为 UTF-8 字节（16 字节）
  *
- * No external dependencies. No CDN. No crypto.subtle required.
+ * 无外部依赖，无需 CDN，无需 crypto.subtle。
  */
 
 /* ============================================================
- * Obfuscated Secret Key — constructed at runtime
+ * 混淆密钥 — 运行时动态构建
  * ============================================================ */
 
 var DEFAULT_SECRET_KEY = (function () {
@@ -24,12 +24,12 @@ var DEFAULT_SECRET_KEY = (function () {
 })();
 
 /* ============================================================
- * UTF-8 encode / decode helpers
+ * UTF-8 编解码工具函数
  * ============================================================ */
 
 function stringToUtf8Bytes(str) {
-  // For ASCII hex strings this is just charCodeAt,
-  // but we support full UTF-8 for correctness.
+  // 对于 ASCII hex 字符串就是 charCodeAt，
+  // 但为正确性保留完整 UTF-8 支持。
   var bytes = [];
   for (var i = 0; i < str.length; i++) {
     var c = str.charCodeAt(i);
@@ -75,7 +75,7 @@ function utf8BytesToString(bytes) {
 }
 
 /* ============================================================
- * MD5 (RFC 1321) — Pure JavaScript
+ * MD5（RFC 1321）— 纯 JavaScript 实现
  * ============================================================ */
 
 function md5(str) {
@@ -171,7 +171,7 @@ function md5(str) {
 }
 
 /* ============================================================
- * Base64 Decode
+ * Base64 解码
  * ============================================================ */
 
 function base64Decode(str) {
@@ -205,7 +205,7 @@ function base64Decode(str) {
 }
 
 /* ============================================================
- * AES-128-CBC (FIPS-197) — Pure JavaScript
+ * AES-128-CBC（FIPS-197）— 纯 JavaScript 实现
  * ============================================================ */
 
 var SBOX = [
@@ -286,12 +286,12 @@ function invSubBytes(state) {
 }
 
 function invShiftRows(state) {
-  // Row 1: shift right 1
+  // 第 1 行：右移 1 位
   var t = state[13]; state[13] = state[9]; state[9] = state[5]; state[5] = state[1]; state[1] = t;
-  // Row 2: shift right 2
+  // 第 2 行：右移 2 位
   var u = state[2]; state[2] = state[10]; state[10] = u;
   var v = state[6]; state[6] = state[14]; state[14] = v;
-  // Row 3: shift right 3 (= left 1)
+  // 第 3 行：右移 3 位（等价于左移 1 位）
   var w = state[3]; state[3] = state[7]; state[7] = state[11]; state[11] = state[15]; state[15] = w;
 }
 
@@ -332,11 +332,11 @@ function invCipher(state, w) {
 }
 
 /**
- * Pure-JS AES-128-CBC decrypt.
- * data: Uint8Array (ciphertext, must be multiple of 16 bytes)
- * key:  Uint8Array (16 bytes)
- * iv:   Uint8Array (16 bytes)
- * Returns: string (decrypted plaintext, PKCS7 unpadded)
+ * 纯 JS AES-128-CBC 解密。
+ * data: Uint8Array（密文，必须是 16 字节的倍数）
+ * key:  Uint8Array（16 字节密钥）
+ * iv:   Uint8Array（16 字节初始向量）
+ * 返回：string（解密明文，已移除 PKCS7 填充）
  */
 function aesDecryptPureJS(data, key, iv) {
   if (data.length % 16 !== 0) {
@@ -360,7 +360,7 @@ function aesDecryptPureJS(data, key, iv) {
     prev = data.subarray(offset, offset + 16);
   }
 
-  // PKCS7 unpadding
+  // PKCS7 去填充
   var lastByte = out[out.length - 1];
   if (lastByte > 0 && lastByte <= 16) {
     return utf8BytesToString(out.subarray(0, out.length - lastByte));
@@ -369,15 +369,15 @@ function aesDecryptPureJS(data, key, iv) {
 }
 
 /* ============================================================
- * AES Decrypt — main entry point
+ * AES 解密 — 主入口
  *
- * Key derivation: md5(ts + secretKey)
- *   KEY = first 16 chars of the md5 hex string, as UTF-8 bytes
- *   IV  = last 16 chars of the md5 hex string, as UTF-8 bytes
+ * 密钥派生：md5(ts + secretKey)
+ *   KEY = md5 hex 字符串前 16 个字符，作为 UTF-8 字节
+ *   IV  = md5 hex 字符串后 16 个字符，作为 UTF-8 字节
  *
- * encryptedBase64: base64-encoded ciphertext (no IV prepended)
- * ts:              unix timestamp string used in the API call
- * secretKey:       secret key (defaults to DEFAULT_SECRET_KEY)
+ * encryptedBase64: base64 编码的密文（不含 IV 前缀）
+ * ts:              API 调用时的 unix 时间戳字符串
+ * secretKey:       密钥（默认使用 DEFAULT_SECRET_KEY）
  * ============================================================ */
 
 function aesDecrypt(encryptedBase64, ts, secretKey) {

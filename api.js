@@ -1,10 +1,10 @@
 /**
- * api.js - Points Center API Layer
- * Configuration, HTTP helpers, and API functions.
- * Dependencies: CryptoJS (loaded before this script)
+ * api.js - 积分中心 API 层
+ * 配置管理、HTTP 请求工具、业务接口封装。
+ * 前置依赖：CryptoJS（在本脚本之前加载）
  */
 /* ============================================================
- * Utility Functions
+ * 工具函数
  * ============================================================ */
 
 function getParam(name) {
@@ -13,17 +13,17 @@ function getParam(name) {
 }
 
 /* ============================================================
- * Configuration
+ * 配置管理
  *
- * URL_PARAM_MAP defines every config key that can be overridden
- * via query string. Each entry:
- *   key      - CONFIG property name
- *   param    - URL query parameter name
- *   default  - fallback value when not present in URL
- *   coerce   - (optional) type converter: 'int', 'bool', 'string' (default)
+ * URL_PARAM_MAP 定义了所有可通过查询字符串覆盖的配置项。
+ * 每项包含：
+ *   key      - CONFIG 属性名
+ *   param    - URL 查询参数名
+ *   default  - URL 未传参时的默认值
+ *   coerce   - （可选）类型转换：'int'、'bool'、'string'（默认）
  *
- * To add a new config field, just add an entry to URL_PARAM_MAP
- * — no other code changes needed.
+ * 新增配置字段只需在 URL_PARAM_MAP 中添加一行即可，
+ * 无需修改其他代码。
  * ============================================================ */
 
 var URL_PARAM_MAP = [
@@ -41,8 +41,8 @@ var CONFIG = {
 };
 
 /**
- * Initialize CONFIG from URL_PARAM_MAP.
- * Priority: URL query param > default value.
+ * 从 URL_PARAM_MAP 初始化 CONFIG。
+ * 优先级：URL 查询参数 > 默认值。
  */
 (function initConfig() {
     for (var i = 0; i < URL_PARAM_MAP.length; i++) {
@@ -51,7 +51,7 @@ var CONFIG = {
         var value;
 
         if (raw !== '') {
-            // URL param present — apply type coercion
+            // URL 传了参数 — 按类型转换
             if (entry.coerce === 'int') {
                 value = parseInt(raw, 10);
                 if (isNaN(value)) value = entry.default;
@@ -70,7 +70,7 @@ var CONFIG = {
     }
 })();
 
-// Auto-detect API base from env
+// 根据环境自动选择 API 基础地址
 CONFIG.apiBase = (CONFIG.env === 'prod' ? CONFIG.prodApi : CONFIG.testApi) + '/api/v2';
 console.log('[api] apiBase=' + CONFIG.apiBase);
 
@@ -96,8 +96,8 @@ function getTs() {
 }
 
 /**
- * Convert an ASCII string to a CryptoJS WordArray.
- * Each char's byte value becomes one byte in the WordArray.
+ * 将 ASCII 字符串转为 CryptoJS WordArray。
+ * 每个字符的 byte 值映射为 WordArray 中的一个字节。
  */
 function asciiToWordArray(str) {
     var hex = '';
@@ -110,13 +110,13 @@ function asciiToWordArray(str) {
 }
 
 /**
- * AES-128-CBC decrypt using CryptoJS.
- * Key derivation (matches server):
+ * 使用 CryptoJS 进行 AES-128-CBC 解密。
+ * 密钥派生（与服务端一致）：
  *   raw    = ts + secretKey
  *   keyMd5 = md5(raw)
- *   KEY    = first 16 hex chars of keyMd5, as ASCII bytes → 16 bytes
- *   IV     = last 16 hex chars of keyMd5,  as ASCII bytes → 16 bytes
- * Ciphertext is the FULL base64-decoded data (IV is NOT prepended).
+ *   KEY    = keyMd5 前 16 个 hex 字符，作为 ASCII 字节 → 16 字节
+ *   IV     = keyMd5 后 16 个 hex 字符，作为 ASCII 字节 → 16 字节
+ * 密文为完整 base64 解码后的数据（IV 不在前面拼接）。
  */
 function aesDecrypt(encryptedBase64, ts, secretKey) {
     try {
@@ -125,7 +125,7 @@ function aesDecrypt(encryptedBase64, ts, secretKey) {
         console.log('[api]   secretKey=' + secretKey);
         console.log('[api]   input (first 60 chars)=' + encryptedBase64.substring(0, 60));
 
-        // Key derivation: md5(ts + secretKey)
+        // 密钥派生：md5(ts + secretKey)
         var raw = ts + secretKey;
         var keyMd5 = md5(raw);
         var keyStr = keyMd5.substring(0, 16);
@@ -136,14 +136,14 @@ function aesDecrypt(encryptedBase64, ts, secretKey) {
         console.log('[api]   keyStr=' + keyStr + ' (as ASCII bytes → 16 bytes)');
         console.log('[api]   ivStr=' + ivStr + ' (as ASCII bytes → 16 bytes)');
 
-        // Convert hex-string chars to actual byte arrays for CryptoJS
+        // 将 hex 字符串字符转为 CryptoJS 可用的字节数组
         var keyWordArray = asciiToWordArray(keyStr);
         var ivWordArray  = asciiToWordArray(ivStr);
 
         console.log('[api]   keyWordArray sigBytes=' + keyWordArray.sigBytes);
         console.log('[api]   ivWordArray sigBytes=' + ivWordArray.sigBytes);
 
-        // Base64 decode (full data = ciphertext, no IV prepended)
+        // Base64 解码（完整数据即密文，不含 IV 前缀）
         var ciphertext = CryptoJS.enc.Base64.parse(encryptedBase64);
         console.log('[api]   ciphertext sigBytes=' + ciphertext.sigBytes + ' blocks=' + (ciphertext.sigBytes / 16));
 
@@ -171,8 +171,8 @@ function aesDecrypt(encryptedBase64, ts, secretKey) {
 }
 
 /**
- * Decrypt AES-encrypted data field in API response.
- * ts must match the ts used in the API request (required for key derivation).
+ * 解密 API 响应中的 AES 加密 data 字段。
+ * ts 必须与 API 请求中的 ts 一致（密钥派生需要）。
  */
 function decryptResponseData(resp, ts) {
     if (!resp || !resp.data || typeof resp.data !== 'string') {
@@ -198,7 +198,7 @@ function decryptResponseData(resp, ts) {
 }
 
 /* ============================================================
- * HTTP Helpers
+ * HTTP 请求工具
  * ============================================================ */
 
 function apiGet(url, callback) {
@@ -264,7 +264,7 @@ function apiPost(url, body, callback) {
 }
 
 /* ============================================================
- * Task Icon Mapping
+ * 任务图标映射
  * ============================================================ */
 
 var ICON_MAP = {
@@ -298,11 +298,11 @@ function mapTaskIcon(category, type) {
     return ICON_MAP.default;
 }
 
-/** Normalize a task object from API format to UI format */
+/** 将任务对象从 API 格式转为 UI 展示格式 */
 function normalizeTask(raw) {
     var iconData = mapTaskIcon(raw.category || '', raw.type || '');
-    // Force manual Claim interaction — even on refresh.
-    // 'done' only set locally after user clicks Claim in this session.
+    // 强制手动领取交互——刷新后也保持。
+    // 'done' 状态仅在本次会话中用户点击 Claim 后设置。
     var status = 'available';
     if (raw.is_claim === 1) {
         status = 'done';
@@ -330,7 +330,7 @@ function normalizeTask(raw) {
     };
 }
 
-/** Normalize an array of task objects */
+/** 批量规范化任务对象数组 */
 function normalizeTasks(rawList) {
     var result = [];
     for (var i = 0; i < rawList.length; i++) {
@@ -339,7 +339,7 @@ function normalizeTasks(rawList) {
     return result;
 }
 
-/** Build checkin days array from API checkin object */
+/** 从 API 签到对象构建签到天数组 */
 function normalizeCheckin(checkinData) {
     if (!checkinData) return null;
 
@@ -360,7 +360,7 @@ function normalizeCheckin(checkinData) {
         });
     }
 
-    // Determine if today is already checked
+    // 判断今天是否已签到
     var checkedToday = false;
     if (index > 0 && index <= totalDays && checked[index - 1] === 1) {
         checkedToday = true;
@@ -379,13 +379,13 @@ function normalizeCheckin(checkinData) {
 }
 
 /* ============================================================
- * API Functions
+ * 业务接口
  * ============================================================ */
 
 /**
- * Fetch task list, points, and check-in status in one call.
+ * 一次请求获取任务列表、积分和签到状态。
  * GET /api/v2/tasklists
- * Response data (AES-encrypted): { task: [...], points: int, checkin: {...}, expire_point, expire_date, ad_unit_id }
+ * 响应 data（AES 加密）：{ task: [...], points: int, checkin: {...}, expire_point, expire_date, ad_unit_id }
  */
 function fetchTaskLists(callback) {
     var ts = getTs();
@@ -417,7 +417,7 @@ function fetchTaskLists(callback) {
             console.log(data);
             console.log('[api]   task count=' + (data.task ? data.task.length : 0));
 
-            // Normalize tasks
+            // 规范化任务数据
             var tasks = [];
             if (data.task && data.task.length !== undefined) {
                 tasks = normalizeTasks(data.task);
@@ -428,7 +428,7 @@ function fetchTaskLists(callback) {
                 }
             }
 
-            // Normalize checkin
+            // 规范化签到数据
             var checkinNorm = null;
             if (data.checkin) {
                 checkinNorm = normalizeCheckin(data.checkin);
@@ -453,7 +453,7 @@ function fetchTaskLists(callback) {
     });
 }
 
-/** Get points details / history (separate endpoint for history view) */
+/** 获取积分明细/历史记录（历史面板使用的独立接口） */
 function fetchPoints(callback) {
     var ts = getTs();
     var sign = buildSign([CONFIG.cId, CONFIG.userId, ts], true);
@@ -473,7 +473,7 @@ function fetchPoints(callback) {
     });
 }
 
-/** Daily check-in */
+/** 每日签到 */
 function apiCheckin(isMakeup, callback) {
     var ts = getTs();
     var sign = buildSign([CONFIG.cId, CONFIG.userId, ts], true);
@@ -488,7 +488,7 @@ function apiCheckin(isMakeup, callback) {
     });
 }
 
-/** Get landing page URL for a task (AES-encrypted response) */
+/** 获取任务落地页 URL（响应 data 为 AES 加密） */
 function apiLanding(tId, callback) {
     var ts = getTs();
     var sign = buildSign([CONFIG.cId, String(tId), ts], true);
@@ -502,7 +502,7 @@ function apiLanding(tId, callback) {
     });
 }
 
-/** Report task status (click/arrive/finish) */
+/** 上报任务行为（click 点击 / arrive 到达 / finish 完成） */
 function apiReport(tId, act, site, callback) {
     var ts = getTs();
     site = site || '';
@@ -517,7 +517,7 @@ function apiReport(tId, act, site, callback) {
     });
 }
 
-/** Claim task points */
+/** 领取任务积分奖励 */
 function apiClaim(tId, callback) {
     var ts = getTs();
     var sign = buildSign([CONFIG.cId, String(tId), CONFIG.userId, ts], true);
@@ -530,7 +530,7 @@ function apiClaim(tId, callback) {
     });
 }
 
-/** Get rewards list */
+/** 获取奖品列表 */
 function fetchRewards(callback) {
     var ts = getTs();
     var sign = buildSign([CONFIG.cId, CONFIG.userId, ts], true);
@@ -548,7 +548,7 @@ function fetchRewards(callback) {
     });
 }
 
-/** Exchange points for reward */
+/** 积分兑换奖品 */
 function apiExchange(rewardId, callback) {
     var ts = getTs();
     var sign = buildSign([CONFIG.cId, CONFIG.userId, String(rewardId), ts], true);
