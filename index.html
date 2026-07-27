@@ -363,6 +363,9 @@
         .task-action-btn.done {
             background: #34C759;
         }
+        .task-action-btn.claim {
+            background: #34C759;
+        }
         .task-reward {
             font-size: 12px;
             color: #FF9500;
@@ -928,6 +931,7 @@
                 disabled = ' disabled';
                 btnHtml = '&#10003; Done';
             } else if (t.status === 'claim') {
+                btnClass += ' claim';
                 btnHtml = 'Claim';
             } else {
                 btnHtml = 'Go';
