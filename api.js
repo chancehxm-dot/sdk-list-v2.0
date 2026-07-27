@@ -4,26 +4,6 @@
  * Dependencies: CryptoJS (loaded before this script)
  */
 /* ============================================================
- * Configuration
- * ============================================================ */
-var CONFIG = {
-    env: 'test2',
-    testApi: 'https://api.zombifieds.com',
-    prodApi: 'https://api.zombifieds.com',
-    cId: 'test2',
-    userId: '',
-    secretKey: '00fd3c92cecb228f39743ad7a6584062',
-    isHideCompleted: false,
-    loadingTimeout: 20000
-};
-
-console.log('[api] secretKey=' + CONFIG.secretKey);
-
-// Auto-detect API base from env
-CONFIG.apiBase = (CONFIG.env === 'prod' ? CONFIG.prodApi : CONFIG.testApi) + '/api/v2';
-console.log('[api] env=' + CONFIG.env + ' apiBase=' + CONFIG.apiBase);
-
-/* ============================================================
  * Utility Functions
  * ============================================================ */
 
@@ -32,8 +12,67 @@ function getParam(name) {
     return match ? decodeURIComponent(match[1]) : '';
 }
 
-CONFIG.userId = getParam('user_id') || 'demo_user_001';
-console.log('[api] userId=' + CONFIG.userId);
+/* ============================================================
+ * Configuration
+ *
+ * URL_PARAM_MAP defines every config key that can be overridden
+ * via query string. Each entry:
+ *   key      - CONFIG property name
+ *   param    - URL query parameter name
+ *   default  - fallback value when not present in URL
+ *   coerce   - (optional) type converter: 'int', 'bool', 'string' (default)
+ *
+ * To add a new config field, just add an entry to URL_PARAM_MAP
+ * — no other code changes needed.
+ * ============================================================ */
+
+var URL_PARAM_MAP = [
+    { key: 'env',        param: 'env',        default: 'test2' },
+    { key: 'cId',        param: 'c_id',       default: 'test2' },
+    { key: 'userId',     param: 'user_id',    default: 'demo_user_001' },
+    { key: 'secretKey',  param: 'secret_key', default: '00fd3c92cecb228f39743ad7a6584062' },
+    { key: 'isHideCompleted', param: 'is_hide', default: false, coerce: 'bool' },
+    { key: 'loadingTimeout',  param: 'loading_timeout', default: 20000, coerce: 'int' }
+];
+
+var CONFIG = {
+    testApi: 'https://api.zombifieds.com',
+    prodApi: 'https://api.zombifieds.com'
+};
+
+/**
+ * Initialize CONFIG from URL_PARAM_MAP.
+ * Priority: URL query param > default value.
+ */
+(function initConfig() {
+    for (var i = 0; i < URL_PARAM_MAP.length; i++) {
+        var entry = URL_PARAM_MAP[i];
+        var raw = getParam(entry.param);
+        var value;
+
+        if (raw !== '') {
+            // URL param present — apply type coercion
+            if (entry.coerce === 'int') {
+                value = parseInt(raw, 10);
+                if (isNaN(value)) value = entry.default;
+            } else if (entry.coerce === 'bool') {
+                value = (raw === '1' || raw === 'true');
+            } else {
+                value = raw;
+            }
+            console.log('[api] config ' + entry.key + ' = ' + value + ' (from URL ' + entry.param + ')');
+        } else {
+            value = entry.default;
+            console.log('[api] config ' + entry.key + ' = ' + value + ' (default)');
+        }
+
+        CONFIG[entry.key] = value;
+    }
+})();
+
+// Auto-detect API base from env
+CONFIG.apiBase = (CONFIG.env === 'prod' ? CONFIG.prodApi : CONFIG.testApi) + '/api/v2';
+console.log('[api] apiBase=' + CONFIG.apiBase);
 
 function md5(str) {
     return CryptoJS.MD5(str).toString();
