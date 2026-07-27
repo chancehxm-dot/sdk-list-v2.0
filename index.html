@@ -1060,6 +1060,7 @@
             }
 
             if (resp && resp.code === 0) {
+                hideLoading();
                 showToast('Check-in successful!', 'success');
                 refreshAll();
             } else {
@@ -1199,6 +1200,7 @@
                 }
 
                 if (resp2 && resp2.code === 0) {
+                    hideLoading();
                     showToast('Reward claimed! +' + task.reward + ' pts', 'success');
                     // Refresh from server — normalizeTask reads is_claim=1
                     // as status='done', so the button shows "✓ Done" permanently.
@@ -1227,6 +1229,7 @@
             }
 
             if (resp && resp.code === 0) {
+                hideLoading();
                 showToast('Redeemed: ' + name + '!', 'success');
                 refreshAll();
             } else {
