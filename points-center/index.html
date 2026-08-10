@@ -1181,7 +1181,7 @@
                 hideLoading();
                 var goTs = getTs();
                 var goSign = buildSign([CONFIG.cId, String(task.t_id), goTs], true);
-                var goUrl = 'go.html?c_id=' + encodeURIComponent(CONFIG.cId)
+                var goUrl = '../landing/go.html?c_id=' + encodeURIComponent(CONFIG.cId)
                     + '&t_id=' + encodeURIComponent(task.t_id)
                     + '&ts=' + goTs
                     + '&sign=' + goSign
