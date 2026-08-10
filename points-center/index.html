@@ -755,6 +755,16 @@
         </div>
     </div>
 
+    <!-- 红包雨入口 -->
+    <div class="rp-entry-banner" id="redpacketBanner" onclick="RedPacketRain.start()">
+        <div class="rp-entry-icon">🧧</div>
+        <div class="rp-entry-info">
+            <div class="rp-entry-title">Red Packet Rain</div>
+            <div class="rp-entry-sub">Tap to grab free points!</div>
+        </div>
+        <div class="rp-entry-arrow">GO &rsaquo;</div>
+    </div>
+
     <!-- 七日签到 -->
     <div class="checkin-wrap">
         <div class="checkin-card">
@@ -850,6 +860,8 @@
     <script src="js/api.js"></script>
     <!-- 原生桥接层：WebView JSNative 通信 -->
     <script src="js/native.js"></script>
+    <!-- 红包雨模块：全屏掉落动画 + 点击抢积分 -->
+    <script src="js/redpacket-rain.js"></script>
 
     <script>
     /* ============================================================
@@ -1474,6 +1486,12 @@
         });
 
         document.getElementById('showHistory').addEventListener('click', openHistory);
+
+        // 红包雨结束后刷新积分
+        window.addEventListener('redpacket:close', function () {
+            console.log('[app] redpacket closed, refreshing points');
+            refreshAll();
+        });
     }
 
     if (document.readyState === 'loading') {
