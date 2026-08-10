@@ -143,13 +143,39 @@
             color: #1C1C1E;
         }
         .points-history-link {
-            display: block;
-            text-align: right;
-            font-size: 12px;
-            color: #FF9500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
+            padding: 12px 14px;
+            background: #FFF8F0;
+            border: 1px solid #FFE0B2;
+            border-radius: 10px;
             text-decoration: none;
-            margin-top: 8px;
+            color: #FF9500;
+            font-size: 14px;
             font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .points-history-link:active {
+            background: #FFF0D5;
+            transform: scale(0.98);
+        }
+        .points-history-link .history-link-icon {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .points-history-link .history-link-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+        .points-history-link .history-link-arrow {
+            font-size: 16px;
+            color: #FF9500;
+            font-weight: 700;
         }
 
         /* 七日签到 */
@@ -715,7 +741,16 @@
                         <span class="stat-dot spend"></span> Spent <span class="stat-val" id="pointsSpent">0</span>
                     </div>
                 </div>
-                <a href="javascript:void(0)" class="points-history-link" id="showHistory">View History &#8250;</a>
+                <a href="javascript:void(0)" class="points-history-link" id="showHistory">
+                    <span class="history-link-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        View Points History
+                    </span>
+                    <span class="history-link-arrow">&#8250;</span>
+                </a>
             </div>
         </div>
     </div>
