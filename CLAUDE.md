@@ -14,14 +14,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ├── index.html        # Main app: points card, daily check-in (7-day), task/rewards tabs
 ├── go.html           # Landing page transit — decrypts AES-encrypted task URL & redirects
 ├── task-demo.html    # Simulated task completion page with countdown timer (dev/testing)
-├── api.js            # API layer: CONFIG (URL-param-driven), XHR helpers, all business endpoints
-├── native.js         # WebView bridge (window.JSNative) — Chrome Tab + incentive video
-├── crypto.js         # Pure-JS MD5, Base64, AES-128-CBC (zero-dependency fallback for CryptoJS)
 ├── privacy.html      # Legal: Privacy Policy (no ads/tracking)
 ├── terms.html        # Legal: Terms of Service (no ads/tracking)
 ├── cookies.html      # Legal: Cookie Policy (no ads/tracking)
 ├── robots.txt        # Allow all, disallow /api/
 ├── sitemap.xml       # Index + legal pages
+├── js/
+│   ├── api.js        # API layer: CONFIG (URL-param-driven), XHR helpers, all business endpoints
+│   ├── native.js     # WebView bridge (window.JSNative) — Chrome Tab + incentive video
+│   └── crypto.js     # Pure-JS MD5, Base64, AES-128-CBC (zero-dependency fallback for CryptoJS)
 ├── libs/
 │   ├── crypto-js.min.js   # CryptoJS (MD5 + AES) — loaded before api.js
 │   └── crypto.ts          # TypeScript source reference for crypto.js
@@ -36,8 +37,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `index.html` loads scripts in this dependency order:
 1. `libs/crypto-js.min.js` — CryptoJS (MD5 + AES primitives)
-2. `api.js` — Depends on CryptoJS for `buildSign()` and `aesDecrypt()`
-3. `native.js` — Standalone, self-executing module
+2. `js/api.js` — Depends on CryptoJS for `buildSign()` and `aesDecrypt()`
+3. `js/native.js` — Standalone, self-executing module
 
 `go.html` and `task-demo.html` each include their own inline API logic and only depend on `libs/crypto-js.min.js`.
 
