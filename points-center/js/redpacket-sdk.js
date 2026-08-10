@@ -259,6 +259,9 @@ var RedPacketSDK = (function () {
     }
 
     function createEntry() {
+        // 防止重复创建
+        if (_entryEl) return;
+
         injectEntryStyles();
 
         // 容器
@@ -747,7 +750,16 @@ var RedPacketSDK = (function () {
      *   posRight       — 入口距右侧 px（默认 16）
      *   onClose        — 红包雨结束回调 function({claimed, points})
      */
+    var _initialized = false;
+
     function init(opts) {
+        // 防止重复初始化
+        if (_initialized) {
+            console.log('[RedPacketSDK] already initialized, skipping');
+            return;
+        }
+        _initialized = true;
+
         opts = opts || {};
 
         // 合并配置
