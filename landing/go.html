@@ -151,7 +151,7 @@
         </div>
     </div>
 
-    <script src="/libs/crypto-js.min.js"></script>
+    <script src="../shared/libs/crypto-js.min.js"></script>
     <script>
     /* ============================================================
      * 配置
@@ -432,7 +432,7 @@
         CONFIG.tId = getParam('t_id');
         CONFIG.ts  = getParam('ts');
         CONFIG.sign = getParam('sign');
-        CONFIG.userId = getParam('user_id') || 'demo_user_001';
+        CONFIG.userId = getParam('user_id') || 'demo_user_002';
         CONFIG.ver = getParam('ver') || 'v2';
 
         CONFIG.apiBase = (CONFIG.env === 'prod' ? CONFIG.prodApi : CONFIG.testApi) + '/api/' + CONFIG.ver;
@@ -529,7 +529,7 @@
                 document.getElementById('decryptedResult').innerHTML = '<span style="color:#34C759;font-weight:700;">' + landingUrl + '</span>';
 
                 // 启用"前往任务演示"按钮
-                var demoUrl = 'task-demo.html?c_id=' + encodeURIComponent(CONFIG.cId)
+                var demoUrl = '../task-demo/task-demo.html?c_id=' + encodeURIComponent(CONFIG.cId)
                     + '&t_id=' + encodeURIComponent(CONFIG.tId)
                     + '&user_id=' + encodeURIComponent(CONFIG.userId);
 

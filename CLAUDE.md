@@ -4,49 +4,66 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-积分中心（Points Center）H5 application — a loyalty/rewards platform where users earn points by completing tasks (playing games, watching videos, reading articles) and redeem points for rewards. Supports daily check-in, incentive video ads, and WebView native bridge integration.
+SDK 集合项目 — 包含积分中心 H5 应用、Task Center SDK、Task Host SDK 等多个独立模块。每个模块在自己的目录下，公共资源在 `shared/`。
 
-**Tech stack**: Vanilla HTML/CSS/JS, ES5 syntax only, zero framework dependencies. CryptoJS for MD5/AES (with a standalone pure-JS backup in `crypto.js`).
+**Tech stack**: Vanilla HTML/CSS/JS, ES5 syntax only, zero framework dependencies. CryptoJS for MD5/AES (with a standalone pure-JS backup in `shared/crypto.js`).
 
 ## File Architecture
 
 ```
-├── index.html        # Main app: points card, daily check-in (7-day), task/rewards tabs
-├── go.html           # Landing page transit — decrypts AES-encrypted task URL & redirects
-├── task-demo.html    # Simulated task completion page with countdown timer (dev/testing)
-├── privacy.html      # Legal: Privacy Policy (no ads/tracking)
-├── terms.html        # Legal: Terms of Service (no ads/tracking)
-├── cookies.html      # Legal: Cookie Policy (no ads/tracking)
-├── robots.txt        # Allow all, disallow /api/
-├── sitemap.xml       # Index + legal pages
-├── js/
-│   ├── api.js        # API layer: CONFIG (URL-param-driven), XHR helpers, all business endpoints
-│   ├── native.js     # WebView bridge (window.JSNative) — Chrome Tab + incentive video
-│   └── crypto.js     # Pure-JS MD5, Base64, AES-128-CBC (zero-dependency fallback for CryptoJS)
-├── libs/
-│   ├── crypto-js.min.js   # CryptoJS (MD5 + AES) — loaded before api.js
-│   └── crypto.ts          # TypeScript source reference for crypto.js
-├── task-center/           # Task Center SDK (separate npm project, Rollup build)
-│   ├── src/               # Source: core.js, adapter.js, ui.js, utils.js, constants.js
-│   ├── build/             # Output: ES, UMD, IIFE bundles
-│   └── rollup.config.js
-└── doc/                   # API documentation (Chinese), including native interaction spec
+├── shared/                           # 公共模块 — 所有子模块共享
+│   ├── libs/
+│   │   └── crypto-js.min.js          #   CryptoJS 库（MD5 + AES）
+│   ├── crypto.ts                     #   TypeScript 参考实现
+│   └── crypto.js                     #   纯 JS 加解密备用（零依赖）
+│
+├── points-center/                    # 积分中心模块 — H5 积分商城应用
+│   ├── index.html                    #   主页面：积分卡片、签到、任务、奖品
+│   ├── js/
+│   │   ├── api.js                    #     API 层：CONFIG、签名、AES 解密、业务接口
+│   │   └── native.js                 #     WebView 桥接：Chrome Tab + 激励视频
+│   ├── privacy.html                  #   法律页面（无广告/追踪）
+│   ├── terms.html                    #   法律页面（无广告/追踪）
+│   └── cookies.html                  #   Cookie 政策（无广告/追踪）
+│
+├── landing/                          # 落地页中转模块 — AES 解密 URL 并跳转
+│   └── go.html                       #   中转页（自包含 inline JS）
+│
+├── task-demo/                        # 任务演示模块 — 开发/测试用
+│   └── task-demo.html                #   模拟任务页（自包含 inline JS）
+│
+├── task-center/                      # Task Center SDK — 独立 npm 项目（Rollup 构建）
+│   ├── src/                          #   源码：core.js, adapter.js, ui.js, utils.js, constants.js
+│   ├── build/                        #   输出：ES, UMD, IIFE 三种格式
+│   ├── rollup.config.js
+│   └── package.json
+│
+├── task-host-sdk/                    # Task Host SDK — 任务宿主页 SDK
+│   ├── task-host-sdk.js              #   拼接构建产物
+│   ├── task-host-sdk.umd.js          #   UMD 单文件构建产物
+│   └── modules/                      #   源码模块（00-core ~ 14-sdk，按依赖顺序排列）
+│
+├── doc/                              # API 文档（中文）
+├── robots.txt
+├── sitemap.xml
+└── CLAUDE.md
 ```
 
-## Script Loading Order
+## Script Loading
 
-`index.html` loads scripts in this dependency order:
-1. `libs/crypto-js.min.js` — CryptoJS (MD5 + AES primitives)
-2. `js/api.js` — Depends on CryptoJS for `buildSign()` and `aesDecrypt()`
-3. `js/native.js` — Standalone, self-executing module
+**`points-center/index.html`** loads in this order:
+1. `../shared/libs/crypto-js.min.js` — CryptoJS 库
+2. `js/api.js` — 依赖 CryptoJS，暴露 CONFIG、业务 API 函数
+3. `js/native.js` — 独立 IIFE，暴露 NativeBridge 全局对象
+4. Inline `<script>` — 依赖以上三个文件的所有导出
 
-`go.html` and `task-demo.html` each include their own inline API logic and only depend on `libs/crypto-js.min.js`.
+**`landing/go.html`** and **`task-demo/task-demo.html`** each load only `../shared/libs/crypto-js.min.js` plus their own inline JS — they are fully self-contained.
 
 ## API Signing & Encryption
 
 ### Request Signing
 
-MD5-based, with two variants depending on the endpoint:
+MD5-based, with two variants:
 
 | Endpoint | Sign algorithm |
 |---|---|
@@ -66,7 +83,7 @@ API responses with sensitive data have the `data` field AES-128-CBC encrypted:
 
 ## Task Types & Flow
 
-1. **h5** — Opens a landing URL (production: native Chrome Tab or direct link; test: `go.html` transit page). Reports click→arrive, user completes task on landing page, then refreshes to claim.
+1. **h5** — Opens a landing URL (production: native Chrome Tab or direct link; test: `landing/go.html` transit page). Reports click→arrive, user completes task on landing page, then refreshes to claim.
 2. **ad** — Incentive video. Requires native bridge (`NativeBridge.openVideo`). After video completes, auto-reports finish and auto-claims reward.
 3. **api** — Server-side task. Only reports click, no jump. The server detects completion.
 
@@ -90,20 +107,30 @@ Key URL params: `c_id`, `user_id`, `env`, `secret_key`, `is_hide`, `loading_time
 
 Separate Rollup project. Build via `cd task-center && npm run build`. Public API: `TaskCenter.init(config)`, `.onBrowserClose()`, `.refresh()`, `.reload()`, `.destroy()`.
 
+## Task Host SDK (`task-host-sdk/`)
+
+Task host page SDK — tracks user behavior (click, duration) on task landing pages. Exposes `window.TaskHostSDK`. Source modules in `modules/` numbered 00-14 by dependency order. Build via `node modules/build.js`.
+
+## Adding a New Module
+
+1. Create `<module-name>/` directory at repo root
+2. If the module depends on `crypto-js.min.js`, reference it as `../shared/libs/crypto-js.min.js`
+3. Keep module self-contained — own JS, own HTML, no cross-module imports (use `shared/` for truly common code)
+
 ## Development
 
 - **Local dev server**: Port 3338 (configured in `.vscode/settings.json`)
 - **API environments**: Set via `?env=` param — `test2` (default), `prod`
   - Test API base: `http://192.168.1.153:7020/api/v2`
   - Prod API base: `https://api.zombifieds.com/api/v2`
-- **No build step** for the main app — edit HTML/JS files directly
-- **View `go.html` debug panel**: Set `CONFIG.env` to non-`prod` to see the full request/decrypt inspector instead of silent redirect
-- **View `task-demo.html`**: Navigate with `?c_id=...&t_id=...&user_id=...&duration=30`
+- **No build step** for points-center/landing/task-demo — edit HTML/JS files directly
+- **View `landing/go.html` debug panel**: Set `CONFIG.env` to non-`prod` to see the full request/decrypt inspector
+- **View `task-demo/task-demo.html`**: Navigate with `?c_id=...&t_id=...&user_id=...&duration=30`
 
 ## Code Style Constraints
 
 - **ES5 only**: `var`, `function`, callbacks — no arrow functions, `let`/`const`, template strings, classes, Promises, async/await, destructuring, or spread operators
 - **IIFE modules**: Use `(function() { ... })()` patterns for scope isolation where appropriate
-- **XHR over fetch**: Prefer `XMLHttpRequest`; `fetch` used only in `go.html`'s `reportArrival` with `keepalive` for reliability during page unload
+- **XHR over fetch**: Prefer `XMLHttpRequest`; `fetch` used only in `landing/go.html`'s `reportArrival` with `keepalive` for reliability during page unload
 - **English UI** throughout (labels, button text, toast messages)
-- **No ads on legal pages** — `privacy.html`, `terms.html`, `cookies.html` must never contain ad scripts, GPT containers, or tracking code
+- **No ads on legal pages** — legal pages must never contain ad scripts, GPT containers, or tracking code
