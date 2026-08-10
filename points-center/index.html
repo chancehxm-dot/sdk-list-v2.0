@@ -755,15 +755,7 @@
         </div>
     </div>
 
-    <!-- 红包雨入口 -->
-    <div class="rp-entry-banner" id="redpacketBanner" onclick="RedPacketRain.start()">
-        <div class="rp-entry-icon">🧧</div>
-        <div class="rp-entry-info">
-            <div class="rp-entry-title">Red Packet Rain</div>
-            <div class="rp-entry-sub">Tap to grab free points!</div>
-        </div>
-        <div class="rp-entry-arrow">GO &rsaquo;</div>
-    </div>
+    <!-- 红包雨入口由 RedPacketSDK 自动创建（右下角浮动礼包图标） -->
 
     <!-- 七日签到 -->
     <div class="checkin-wrap">
@@ -860,8 +852,8 @@
     <script src="js/api.js"></script>
     <!-- 原生桥接层：WebView JSNative 通信 -->
     <script src="js/native.js"></script>
-    <!-- 红包雨模块：全屏掉落动画 + 点击抢积分 -->
-    <script src="js/redpacket-rain.js"></script>
+    <!-- 红包雨 SDK：浮动礼包入口 + 开启倒计时 + 红包雨游戏 -->
+    <script src="js/redpacket-sdk.js"></script>
 
     <script>
     /* ============================================================
@@ -1487,10 +1479,19 @@
 
         document.getElementById('showHistory').addEventListener('click', openHistory);
 
-        // 红包雨结束后刷新积分
-        window.addEventListener('redpacket:close', function () {
-            console.log('[app] redpacket closed, refreshing points');
-            refreshAll();
+        // 初始化红包雨 SDK（右下角浮动礼包 + 倒计时 + 游戏）
+        RedPacketSDK.init({
+            cId: CONFIG.cId,
+            userId: CONFIG.userId,
+            secretKey: CONFIG.secretKey,
+            apiBase: CONFIG.apiBase,
+            env: CONFIG.env,
+            schedule: ['09:00', '12:00', '15:00', '18:00', '21:00'],
+            windowDuration: 10,
+            onClose: function (result) {
+                console.log('[app] RedPacket rain ended: claimed=' + result.claimed + ' points=' + result.points);
+                refreshAll();
+            }
         });
     }
 
