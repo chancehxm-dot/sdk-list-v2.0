@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sign In - Points Center</title>
+    <meta name="description" content="Sign in to Points Center to earn and redeem rewards.">
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #F2F2F7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Logo */
+        .auth-logo {
+            width: 72px; height: 72px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #FF9500, #FF6B00);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 16px rgba(255,107,0,0.3);
+        }
+        .auth-brand {
+            font-size: 22px; font-weight: 800; color: #1C1C1E;
+            margin-bottom: 4px;
+        }
+        .auth-brand-sub {
+            font-size: 13px; color: #8E8E93; margin-bottom: 24px;
+        }
+
+        /* Tab Switch */
+        .auth-tabs {
+            display: flex; background: #E5E5EA; border-radius: 10px;
+            padding: 3px; margin-bottom: 20px; width: 100%; max-width: 360px;
+        }
+        .auth-tab {
+            flex: 1; padding: 10px; text-align: center;
+            font-size: 14px; font-weight: 600; border: none;
+            background: transparent; color: #636366; cursor: pointer;
+            border-radius: 8px; transition: all 0.25s;
+        }
+        .auth-tab.active {
+            background: #fff; color: #FF9500;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Form Card */
+        .auth-card {
+            background: #fff; border-radius: 16px; padding: 24px 20px;
+            width: 100%; max-width: 360px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .auth-field {
+            margin-bottom: 16px;
+        }
+        .auth-label {
+            font-size: 13px; font-weight: 600; color: #636366;
+            margin-bottom: 6px; display: block;
+        }
+        .auth-input-wrap {
+            position: relative; display: flex; align-items: center;
+        }
+        .auth-input {
+            width: 100%; padding: 12px 14px;
+            border: 2px solid #E5E5EA; border-radius: 10px;
+            font-size: 15px; color: #1C1C1E; outline: none;
+            background: #FAFAFA; transition: border-color 0.2s;
+            -webkit-appearance: none;
+        }
+        .auth-input:focus {
+            border-color: #FF9500; background: #fff;
+        }
+        .auth-input.error {
+            border-color: #FF3B30;
+        }
+        .auth-input-icon {
+            position: absolute; right: 12px;
+            width: 24px; height: 24px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: #8E8E93; font-size: 13px; font-weight: 600;
+            background: none; border: none; padding: 0;
+        }
+        .auth-error-msg {
+            font-size: 11px; color: #FF3B30; margin-top: 4px;
+            display: none;
+        }
+        .auth-error-msg.show { display: block; }
+
+        /* Submit Button */
+        .auth-submit {
+            width: 100%; padding: 14px; border: none;
+            border-radius: 12px; font-size: 16px; font-weight: 700;
+            cursor: pointer; letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #FF9500, #FF6B00);
+            color: #fff; margin-top: 8px;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .auth-submit:active { transform: scale(0.98); opacity: 0.9; }
+        .auth-submit:disabled {
+            background: #E5E5EA; color: #C7C7CC; cursor: not-allowed;
+        }
+
+        /* Toggle text */
+        .auth-toggle-text {
+            text-align: center; margin-top: 16px;
+            font-size: 13px; color: #8E8E93;
+        }
+        .auth-toggle-link {
+            color: #FF9500; font-weight: 700; cursor: pointer;
+            text-decoration: none;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(0,0,0,0.8); color: #fff;
+            padding: 12px 24px; border-radius: 10px;
+            font-size: 14px; font-weight: 600; z-index: 10000;
+            opacity: 0; pointer-events: none;
+            transition: all 0.25s ease; text-align: center; max-width: 260px;
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .toast.success { background: rgba(52,199,89,0.9); }
+        .toast.error { background: rgba(255,59,48,0.9); }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.35); z-index: 9999;
+            display: none; align-items: center; justify-content: center;
+        }
+        .loading-overlay.show { display: flex; }
+        .loading-box {
+            background: #fff; border-radius: 16px;
+            padding: 30px 24px; text-align: center; max-width: 280px; width: 90%;
+        }
+        .loading-spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #F2F2F7;
+            border-top: 4px solid #FF9500;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 14px; color: #636366; line-height: 1.5; }
+
+        /* Back link */
+        .auth-back {
+            margin-top: 20px; font-size: 13px; color: #8E8E93;
+            text-decoration: none;
+        }
+        .auth-back:hover { color: #FF9500; }
+
+        /* Footer */
+        .auth-footer {
+            text-align: center; margin-top: 32px;
+            font-size: 11px; color: #C7C7CC;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Logo + Brand -->
+    <div class="auth-logo">🎯</div>
+    <div class="auth-brand">Points Center</div>
+    <div class="auth-brand-sub">Earn rewards by completing tasks</div>
+
+    <!-- Tab Switch -->
+    <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">Sign Up</button>
+    </div>
+
+    <!-- Form Card -->
+    <div class="auth-card">
+        <!-- Email -->
+        <div class="auth-field">
+            <label class="auth-label">Email</label>
+            <input type="email" class="auth-input" id="emailInput"
+                placeholder="you@example.com" autocomplete="email" autocapitalize="off">
+            <div class="auth-error-msg" id="emailError"></div>
+        </div>
+
+        <!-- Password -->
+        <div class="auth-field">
+            <label class="auth-label">Password</label>
+            <div class="auth-input-wrap">
+                <input type="password" class="auth-input" id="passwordInput"
+                    placeholder="Min. 6 characters" autocomplete="current-password">
+                <button class="auth-input-icon" id="togglePwd" onclick="togglePassword()">Show</button>
+            </div>
+            <div class="auth-error-msg" id="passwordError"></div>
+        </div>
+
+        <!-- Confirm Password (register only) -->
+        <div class="auth-field" id="confirmField" style="display:none;">
+            <label class="auth-label">Confirm Password</label>
+            <input type="password" class="auth-input" id="confirmInput"
+                placeholder="Re-enter your password" autocomplete="new-password">
+            <div class="auth-error-msg" id="confirmError"></div>
+        </div>
+
+        <!-- Submit -->
+        <button class="auth-submit" id="submitBtn" onclick="handleSubmit()">Sign In</button>
+
+        <!-- Toggle -->
+        <div class="auth-toggle-text" id="toggleText">
+            Don't have an account? <a class="auth-toggle-link" href="javascript:void(0)" onclick="switchTab('register')">Sign Up</a>
+        </div>
+    </div>
+
+    <!-- Back to Points Center -->
+    <a href="../points-center/index.html" class="auth-back">&larr; Back to Points Center</a>
+
+    <div class="auth-footer">&copy; 2026 Points Center</div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-box">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">Processing...</div>
+        </div>
+    </div>
+
+    <script src="../shared/libs/crypto-js.min.js"></script>
+    <script>
+    /* ============================================================
+     * 配置
+     * ============================================================ */
+
+    var CONFIG = {
+        env: 'test2',
+        testApi: 'http://192.168.1.153:7020',
+        prodApi: 'https://api.zombifieds.com',
+        cId: '',
+        secretKey: '00fd3c92cecb228f39743ad7a6584062'
+    };
+
+    CONFIG.apiBase = (CONFIG.env === 'prod' ? CONFIG.prodApi : CONFIG.testApi) + '/api/v2';
+
+    /* ============================================================
+     * 状态
+     * ============================================================ */
+
+    var state = {
+        mode: 'login',       // 'login' | 'register'
+        demoMode: false
+    };
+
+    /* ============================================================
+     * 工具
+     * ============================================================ */
+
+    function getParam(name) {
+        var match = window.location.search.match(new RegExp('[?&]' + name + '=([^&]*)'));
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function getTs() {
+        return Math.floor(Date.now() / 1000).toString();
+    }
+
+    function showToast(msg, type) {
+        var t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast ' + (type || '') + ' show';
+        setTimeout(function () { t.classList.remove('show'); }, 2500);
+    }
+
+    function showLoading(text) {
+        document.getElementById('loadingText').textContent = text || 'Processing...';
+        document.getElementById('loadingOverlay').classList.add('show');
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingOverlay').classList.remove('show');
+    }
+
+    /* ============================================================
+     * 表单切换
+     * ============================================================ */
+
+    function switchTab(mode) {
+        state.mode = mode;
+        var isLogin = (mode === 'login');
+
+        document.getElementById('tabLogin').className = 'auth-tab' + (isLogin ? ' active' : '');
+        document.getElementById('tabRegister').className = 'auth-tab' + (isLogin ? '' : ' active');
+
+        document.getElementById('confirmField').style.display = isLogin ? 'none' : 'block';
+        document.getElementById('submitBtn').textContent = isLogin ? 'Sign In' : 'Sign Up';
+        document.getElementById('toggleText').innerHTML = isLogin
+            ? 'Don\'t have an account? <a class="auth-toggle-link" href="javascript:void(0)" onclick="switchTab(\'register\')">Sign Up</a>'
+            : 'Already have an account? <a class="auth-toggle-link" href="javascript:void(0)" onclick="switchTab(\'login\')">Sign In</a>';
+
+        clearErrors();
+        clearInputs();
+    }
+
+    function togglePassword() {
+        var input = document.getElementById('passwordInput');
+        var btn = document.getElementById('togglePwd');
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.textContent = 'Hide';
+        } else {
+            input.type = 'password';
+            btn.textContent = 'Show';
+        }
+    }
+
+    function clearErrors() {
+        var errors = document.querySelectorAll('.auth-error-msg');
+        for (var i = 0; i < errors.length; i++) {
+            errors[i].classList.remove('show');
+            errors[i].textContent = '';
+        }
+        var inputs = document.querySelectorAll('.auth-input');
+        for (var j = 0; j < inputs.length; j++) {
+            inputs[j].classList.remove('error');
+        }
+    }
+
+    function clearInputs() {
+        document.getElementById('emailInput').value = '';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('confirmInput').value = '';
+    }
+
+    /* ============================================================
+     * 表单验证
+     * ============================================================ */
+
+    function validateForm() {
+        clearErrors();
+        var valid = true;
+
+        var email = document.getElementById('emailInput').value.trim();
+        var password = document.getElementById('passwordInput').value;
+        var confirm = document.getElementById('confirmInput').value;
+
+        // 邮箱格式检查
+        var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email) {
+            showFieldError('emailInput', 'emailError', 'Please enter your email');
+            valid = false;
+        } else if (!emailRe.test(email)) {
+            showFieldError('emailInput', 'emailError', 'Please enter a valid email address');
+            valid = false;
+        }
+
+        // 密码长度检查
+        if (!password) {
+            showFieldError('passwordInput', 'passwordError', 'Please enter your password');
+            valid = false;
+        } else if (password.length < 6) {
+            showFieldError('passwordInput', 'passwordError', 'Password must be at least 6 characters');
+            valid = false;
+        }
+
+        // 注册模式额外检查
+        if (state.mode === 'register') {
+            if (!confirm) {
+                showFieldError('confirmInput', 'confirmError', 'Please confirm your password');
+                valid = false;
+            } else if (password !== confirm) {
+                showFieldError('confirmInput', 'confirmError', 'Passwords do not match');
+                valid = false;
+            }
+        }
+
+        return valid;
+    }
+
+    function showFieldError(inputId, errorId, msg) {
+        document.getElementById(inputId).classList.add('error');
+        var el = document.getElementById(errorId);
+        el.textContent = msg;
+        el.classList.add('show');
+    }
+
+    /* ============================================================
+     * API 调用
+     * ============================================================ */
+
+    function apiPost(url, body, callback) {
+        console.log('[auth] POST ' + url);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.timeout = 15000;
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                console.log('[auth] <- HTTP ' + xhr.status);
+                if (xhr.status === 200) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        callback(null, resp);
+                    } catch (e) {
+                        callback(new Error('Invalid response'), null);
+                    }
+                } else {
+                    callback(new Error('HTTP ' + xhr.status), null);
+                }
+            }
+        };
+        xhr.onerror = function () { callback(new Error('Network error'), null); };
+        xhr.ontimeout = function () { callback(new Error('Request timeout'), null); };
+        xhr.send(JSON.stringify(body));
+    }
+
+    /**
+     * 登录请求（预留）。
+     * POST /api/v2/auth/login
+     * Body: { c_id, email, password, ts, sign }
+     * Sign: md5(c_id + email + ts + secretKey)
+     */
+    function apiLogin(email, password, callback) {
+        var ts = getTs();
+        var raw = CONFIG.cId + email + ts + CONFIG.secretKey;
+        var sign = CryptoJS.MD5(raw).toString();
+
+        var body = {
+            c_id: CONFIG.cId,
+            email: email,
+            password: password,
+            ts: ts,
+            sign: sign
+        };
+
+        var url = CONFIG.apiBase + '/auth/login';
+        apiPost(url, body, function (err, resp) {
+            if (err) {
+                callback(err, null);
+                return;
+            }
+            if (resp && resp.code === 0) {
+                callback(null, resp.data || resp);
+            } else {
+                callback(new Error((resp && resp.msg) || 'Login failed'), null);
+            }
+        });
+    }
+
+    /**
+     * 注册请求（预留）。
+     * POST /api/v2/auth/register
+     * Body: { c_id, email, password, ts, sign }
+     * Sign: md5(c_id + email + ts + secretKey)
+     */
+    function apiRegister(email, password, callback) {
+        var ts = getTs();
+        var raw = CONFIG.cId + email + ts + CONFIG.secretKey;
+        var sign = CryptoJS.MD5(raw).toString();
+
+        var body = {
+            c_id: CONFIG.cId,
+            email: email,
+            password: password,
+            ts: ts,
+            sign: sign
+        };
+
+        var url = CONFIG.apiBase + '/auth/register';
+        apiPost(url, body, function (err, resp) {
+            if (err) {
+                callback(err, null);
+                return;
+            }
+            if (resp && resp.code === 0) {
+                callback(null, resp.data || resp);
+            } else {
+                callback(new Error((resp && resp.msg) || 'Registration failed'), null);
+            }
+        });
+    }
+
+    /* ============================================================
+     * 模拟模式（后端未就绪时使用）
+     * ============================================================ */
+
+    function demoAuth(email, password, isRegister, callback) {
+        console.log('[auth] demo mode ' + (isRegister ? 'register' : 'login') + ': ' + email);
+        // 模拟 500-1000ms 网络延迟
+        var delay = 500 + Math.random() * 500;
+        setTimeout(function () {
+            var userData = {
+                user_id: 'demo_' + email.replace(/[^a-zA-Z0-9]/g, '_'),
+                email: email,
+                token: 'demo_token_' + Date.now()
+            };
+
+            // 存储到 session（模拟 token）
+            if (typeof sessionStorage !== 'undefined') {
+                try {
+                    sessionStorage.setItem('auth_user', JSON.stringify(userData));
+                } catch (e) {}
+            }
+
+            callback(null, userData);
+        }, delay);
+    }
+
+    /* ============================================================
+     * 提交处理
+     * ============================================================ */
+
+    function handleSubmit() {
+        if (!validateForm()) return;
+
+        var email = document.getElementById('emailInput').value.trim();
+        var password = document.getElementById('passwordInput').value;
+        var isLogin = (state.mode === 'login');
+
+        showLoading(isLogin ? 'Signing in...' : 'Creating account...');
+
+        // 优先调真实 API，失败则模拟
+        var apiFn = isLogin ? apiLogin : apiRegister;
+
+        apiFn(email, password, function (err, data) {
+            if (err) {
+                console.log('[auth] API failed: ' + err.message + ', trying demo mode');
+                // 降级到模拟模式
+                demoAuth(email, password, !isLogin, function (demoErr, demoData) {
+                    hideLoading();
+                    if (demoErr) {
+                        showToast((isLogin ? 'Sign in' : 'Sign up') + ' failed. Please try again.', 'error');
+                        return;
+                    }
+                    handleSuccess(demoData, isLogin);
+                });
+                return;
+            }
+            hideLoading();
+            handleSuccess(data, isLogin);
+        });
+    }
+
+    function handleSuccess(data, isLogin) {
+        var email = data.email || '';
+        var userId = data.user_id || '';
+
+        showToast(isLogin ? 'Welcome back!' : 'Account created!', 'success');
+
+        console.log('[auth] success: userId=' + userId + ' email=' + email);
+
+        // 跳转回积分中心主页，携带用户信息
+        var redirectUrl = document.referrer
+            || getParam('redirect')
+            || '../points-center/index.html';
+        var sep = redirectUrl.indexOf('?') === -1 ? '?' : '&';
+        redirectUrl += sep + 'user_id=' + encodeURIComponent(userId)
+            + '&email=' + encodeURIComponent(email);
+
+        setTimeout(function () {
+            window.location.href = redirectUrl;
+        }, 1200);
+    }
+
+    /* ============================================================
+     * 初始化
+     * ============================================================ */
+
+    function init() {
+        CONFIG.cId = getParam('c_id') || 'test2';
+
+        // 支持 keyboard submit
+        document.getElementById('passwordInput').addEventListener('keydown', function (e) {
+            if (e.keyCode === 13) handleSubmit();
+        });
+        document.getElementById('confirmInput').addEventListener('keydown', function (e) {
+            if (e.keyCode === 13) handleSubmit();
+        });
+
+        console.log('[auth] init mode=' + state.mode + ' cId=' + CONFIG.cId);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+    </script>
+</body>
+</html>
